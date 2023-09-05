@@ -1,0 +1,21 @@
+v0.3
+    * Improved efficiency of main event function
+    * Added safeguard against error when in a location with no campsites (e.g.; the prologue Nautiloid)
+    * Moved pt-br localization strings to what is hopefully the correct path
+
+v0.2
+    * Reduced console spam
+    * Added French localization strings by d3Xmachina ( https://www.nexusmods.com/baldursgate3/users/3779466 )
+    * Added Italian localization strings by Rekcheli ( https://www.nexusmods.com/baldursgate3/users/175702818 )
+    * Added Chinese(Simplified) localization strings by LelouchLan ( https://www.nexusmods.com/baldursgate3/users/86684998 )
+    * Added Portuguese(Brazilian) localization strings by AxellSlade ( https://www.nexusmods.com/baldursgate3/users/426944 )
+    * Added Ukrainian localization strings by pinkrabbid ( https://www.nexusmods.com/baldursgate3/users/5273410 )
+    * Added Spanish(ES) localization strings by hawk333 ( https://www.nexusmods.com/baldursgate3/users/1939230 )
+
+v0.1
+    * Initial release
+
+
+
+* Reduced console spam
+* Localization strings by d3Xmachina, Rekcheli, LelouchLan, AxellSlade, pinkrabbid, hawk333

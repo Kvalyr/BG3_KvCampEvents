@@ -9,7 +9,14 @@ local utils = KVS.Utils
 
 
 local function GetActiveCamp()
-    return Osi.DB_ActiveCamp:Get(nil)[1][1]
+    local activeCampTable = Osi.DB_ActiveCamp:Get(nil)
+    if not activeCampTable then return end
+    activeCampTable = activeCampTable[1] -- [1]
+    if not activeCampTable then return end
+    activeCampTable = activeCampTable[1] -- [1][1]
+
+    -- return Osi.DB_ActiveCamp:Get(nil)[1][1]
+    return activeCampTable or ""
 end
 
 local function GetPossibleCampNightEventsForCamp(campsite_str)
@@ -25,9 +32,9 @@ CampEvents.GetPossibleCampNightEventsForCamp_Current = GetPossibleCampNightEvent
 
 -- ================================================================
 --
-function IsValidCampNightEvent(newDialogEvent, newDialogPriority, ignorePrevious)
+function IsValidCampNightEvent(currentCamp, newDialogEvent, newDialogPriority, ignorePrevious)
     if ignorePriority == nil then ignorePriority = false end
-    local currentCamp = GetActiveCamp()  -- _Var2
+
     -- local newDialogEvent -- _Var3
     -- local newDialogPriority -- _Var4
 
@@ -111,6 +118,10 @@ CampEvents.IsValidCampNightEvent = IsValidCampNightEvent
 local function IsNightMode()
     return DB.Bool("DB_Camp_NightMode", 1)
 end
+
+-- local function IsJustWokeUp()
+--     return DB.Bool("DB_CAMP_JustWokeUp", 1)
+-- end
 
 
 -- ================================================================
@@ -229,18 +240,28 @@ local function FindValidNightEvents()
 
     local validEvents = {}
 
+    if Osi.QRY_Camp_IsPlayerBlockedFromTeleportToCamp(GetHostCharacter()) then
+        _Dbg("FindValidNightEvents() - Skipping due to QRY_Camp_IsPlayerBlockedFromTeleportToCamp == true")
+        return validEvents
+    end
+
+    local currentCamp = GetActiveCamp()  -- _Var2
+    if not currentCamp or currentCamp == "" then
+        _Dbg("FindValidNightEvents() - Skipping due to nil currentCamp")
+        return validEvents
+    end
+
     for idx, subTable in pairs(eventsInDB) do
-        local subTableLen = #subTable
         local eventUUID = subTable[1]
         local eventPriority = subTable[2]
         local ignorePrevious = true
 
-        if CampEvents.IsValidCampNightEvent(eventUUID, eventPriority, ignorePrevious) then
+        if CampEvents.IsValidCampNightEvent(currentCamp, eventUUID, eventPriority, ignorePrevious) then
             table.insert(validEvents, eventUUID)
         end
     end
     if KVS.Output.GetLogLevel() >= 3 then
-        _D("FindValidNightEvents() - Events:")
+        _Dbg("FindValidNightEvents() - Events:")
         _D(validEvents)
     end
     return validEvents
@@ -252,12 +273,18 @@ CampEvents.FindValidNightEvents = FindValidNightEvents
 -- ================
 -- CheckNotifyNightEvents
 local function CheckNotifyNightEvents()
-
     if IsNightMode() then
         _Dbg("CheckNotifyNightEvents - Skipping due to DB_Camp_NightMode(1) ")
         CampEvents.Cleanup()
         return
     end
+
+    -- if IsJustWokeUp() then
+    --     -- This remains true from waking up until requesting to end the day, outside of special circumstances - Not useful for us
+    --     _Dbg("CheckNotifyNightEvents - Skipping due to DB_CAMP_JustWokeUp(1) ")
+    --     CampEvents.Cleanup()
+    --     return
+    -- end
 
     local validEvents = CampEvents.FindValidNightEvents()
     local numValidEvents = #validEvents or 0

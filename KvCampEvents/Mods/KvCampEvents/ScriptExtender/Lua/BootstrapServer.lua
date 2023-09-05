@@ -5,7 +5,7 @@ PersistentVars = {}
 -- KvShared
 Ext.Require("KvShared/Main.lua")
 KVS.modPrefix = "KvCE"
-KVS.modVersion = "0.2"
+KVS.modVersion = "0.3"
 
 -- KvCampEvents
 CampEvents = {}
