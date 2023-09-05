@@ -8,14 +8,14 @@
                 <node id="ModuleInfo">
                     <attribute id="Author" type="LSWString" value="Kvalyr"/>
                     <attribute id="CharacterCreationLevelName" type="FixedString" value=""/>
-                    <attribute id="Description" type="LSWString" value="Notifies the player when there are nighttime camp events pending."/>
+                    <attribute id="Description" type="LSWString" value="Notifies the player when there are nighttime camp events pending"/>
                     <attribute id="Folder" type="LSWString" value="KvCampEvents"/>
                     <attribute id="GMTemplate" type="FixedString" value=""/>
                     <attribute id="LobbyLevelName" type="FixedString" value=""/>
                     <attribute id="MD5" type="LSString" value=""/>
                     <attribute id="MainMenuBackgroundVideo" type="FixedString" value=""/>
                     <attribute id="MenuLevelName" type="FixedString" value=""/>
-                    <attribute id="Name" type="FixedString" value="KvCampEvents"/>
+                    <attribute id="Name" type="FixedString" value="KvCampEvents - v0.2"/>
                     <attribute id="NumPlayers" type="uint8" value="4"/>
                     <attribute id="PhotoBooth" type="FixedString" value=""/>
                     <attribute id="StartupLevelName" type="FixedString" value=""/>

@@ -24,6 +24,7 @@ end
 
 
 function DebugCampNightProcs()
+    -- Mods.KvCampEvents.KVS.Output.SetLogLevel(3)
 
     local campQueuedDBs = {}
     -- campQueuedDBs["DB_CampNight_Camp"] = 2

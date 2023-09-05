@@ -13,6 +13,14 @@ data "StatusPropertyFlags" "DisableCombatlog;"
 data "StackId" "KvCampEvents_Notification_CampNightEvents"
 data "StackType" "Overwrite"
 
+new entry "KvCE_Notification_CampNightEvents_NoOverhead"
+type "StatusData"
+data "StatusType" "BOOST"
+using "KvCampEvents_Notification_CampNightEvents"
+data "StatusPropertyFlags" "DisableCombatlog;DisableOverhead"
+
+
+
 // ==== Relationship Dialogues
 new entry "KvCampEvents_Notification_RelationshipDialogues"
 type "StatusData"
@@ -27,3 +35,9 @@ data "Description" "h4bae1f9ag9c67g464dgae46g7eeb9cbe7984;1"
 data "StatusPropertyFlags" "DisableCombatlog;"
 data "StackId" "KvCampEvents_Notification_RelationshipDialogues"
 data "StackType" "Overwrite"
+
+new entry "KvCE_Notification_RelationshipDialogues_NoOverhead"
+type "StatusData"
+data "StatusType" "BOOST"
+using "KvCampEvents_Notification_CampNightEvents"
+data "StatusPropertyFlags" "DisableCombatlog;DisableOverhead"

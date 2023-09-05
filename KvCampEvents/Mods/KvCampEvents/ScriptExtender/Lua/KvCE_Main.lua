@@ -1,5 +1,9 @@
 print("======== KvCE START Main")
 
+local _E = KVS.Output.Error
+local _W = KVS.Output.Warning
+local _I = KVS.Output.Info
+local _Dbg = KVS.Output.Debug
 local DB = KVS.DB
 local utils = KVS.Utils
 
@@ -60,14 +64,14 @@ function IsValidCampNightEvent(newDialogEvent, newDialogPriority, ignorePrevious
         local previousBestCampNightDialog = previousBestCampNightTable[1] -- _Var5
         local previousBestCampNightPriority = previousBestCampNightTable[2] -- _Var6
 
-        _P("IsValidCampNightEvent - Previous Best: '" .. previousBestCampNightDialog .. "'")
+        _Dbg("IsValidCampNightEvent - Previous Best: '" .. previousBestCampNightDialog .. "'")
 
         -- AND DB_Camp_BestCampNight(_Var5, _Var6, _, _, _)
         if not DB.Bool("DB_Camp_BestCampNight", previousBestCampNightDialog, previousBestCampNightPriority ) then return end
 
         -- AND  newDialogPriority > previousBestCampNightPriority
         if not (newDialogPriority > previousBestCampNightPriority) then
-            _P("IsValidCampNightEvent - Ignoring: '" .. newDialogEvent .. "' due to priority.")
+            _Dbg("IsValidCampNightEvent - Ignoring: '" .. newDialogEvent .. "' due to priority.")
             return
         end
 
@@ -98,7 +102,7 @@ function IsValidCampNightEvent(newDialogEvent, newDialogPriority, ignorePrevious
 
     -- DB_Camp_BestCampNight(_Var3, _Var4);
     -- Not needed for speculative - Return/print instead
-    -- _P("IsValidCampNightEvent - Would add: '" .. newDialogEvent .. "' to DB_Camp_BestCampNight.")
+    -- _Dbg("IsValidCampNightEvent - Would add: '" .. newDialogEvent .. "' to DB_Camp_BestCampNight.")
 
     return true
 end
@@ -136,17 +140,17 @@ local function GetExclamationLoopEffectHandle(character_uuid)
     )
 
     if not loopEffectTable then
-        -- _P("GetExclamationLoopEffectHandle", "not loopEffectTable") -- DEBUG
+        -- _Dbg("GetExclamationLoopEffectHandle", "not loopEffectTable") -- DEBUG
         return
     end
     loopEffectTable = loopEffectTable[1]
     if not loopEffectTable then
-        -- _P("GetExclamationLoopEffectHandle", "not loopEffectTable[1]") -- DEBUG
+        -- _Dbg("GetExclamationLoopEffectHandle", "not loopEffectTable[1]") -- DEBUG
         return
     end
     local loop_effect_handle = loopEffectTable[2]
     if not loop_effect_handle then
-        -- _P("GetExclamationLoopEffectHandle", "not loop_effect_handle") -- DEBUG
+        -- _Dbg("GetExclamationLoopEffectHandle", "not loop_effect_handle") -- DEBUG
         return
     end
 
@@ -184,11 +188,14 @@ CampEvents.RemoveExclamationOverCharacter = RemoveExclamationOverCharacter
 -- ================
 -- NotifyPlayer
 local function NotifyPlayer()
-    _P("CampEvents.NotifyPlayer")  -- DEBUG
+    _Dbg("CampEvents.NotifyPlayer")  -- DEBUG
     local character_uuid = GetHostCharacter()
     -- TODO: Differentiate between Camp Events and Relationship Dialogs
-    Osi.ApplyStatus(character_uuid, "KvCampEvents_Notification_CampNightEvents", -1)
-    -- Osi.ApplyStatus(character_uuid, "KvCampEvents_Notification_RelationshipDialogues", -1)
+
+    Osi.ApplyStatus(character_uuid, "KvCE_Notification_CampNightEvents_NoOverhead", -1)
+
+    -- Osi.ApplyStatus(character_uuid, "KvCE_Notification_RelationshipDialogues_NoOverhead", -1)
+
     AddExclamationOverCharacter()
 end
 CampEvents.NotifyPlayer = NotifyPlayer
@@ -198,12 +205,17 @@ CampEvents.NotifyPlayer = NotifyPlayer
 -- ================
 -- Cleanup
 local function Cleanup()
-    _P("CampEvents.Cleanup")  -- DEBUG
+    _Dbg("CampEvents.Cleanup")  -- DEBUG
     local character_uuid = GetHostCharacter()
-    RemoveExclamationOverCharacter(character_uuid)
     -- TODO: Differentiate between Camp Events and Relationship Dialogs
+
     Osi.RemoveStatus(character_uuid, "KvCampEvents_Notification_CampNightEvents")
+    Osi.RemoveStatus(character_uuid, "KvCE_Notification_CampNightEvents_NoOverhead")
+
     -- Osi.RemoveStatus(character_uuid, "KvCampEvents_Notification_RelationshipDialogues")
+    -- Osi.RemoveStatus(character_uuid, "KvCE_Notification_RelationshipDialogues_NoOverhead")
+
+    RemoveExclamationOverCharacter(character_uuid)
 end
 CampEvents.Cleanup = Cleanup
 
@@ -211,9 +223,7 @@ CampEvents.Cleanup = Cleanup
 -- Mods.KvCampEvents.CampEvents.FindValidNightEvents()
 -- ================
 -- FindValidNightEvents
-local function FindValidNightEvents(doDebug)
-    if doDebug == nil then doDebug = false end
-
+local function FindValidNightEvents()
     local eventsInDB = DB.GetRows("DB_CampNight", 2)
     local numEvents = #eventsInDB
 
@@ -229,8 +239,8 @@ local function FindValidNightEvents(doDebug)
             table.insert(validEvents, eventUUID)
         end
     end
-    if doDebug then
-        _P("FindValidNightEvents() - Events:")
+    if KVS.Output.GetLogLevel() >= 3 then
+        _D("FindValidNightEvents() - Events:")
         _D(validEvents)
     end
     return validEvents
@@ -241,18 +251,18 @@ CampEvents.FindValidNightEvents = FindValidNightEvents
 -- Mods.KvCampEvents.CampEvents.CheckNotifyNightEvents()
 -- ================
 -- CheckNotifyNightEvents
-local function CheckNotifyNightEvents(doDebug)
+local function CheckNotifyNightEvents()
 
     if IsNightMode() then
-        _P("CheckNotifyNightEvents - Skipping due to DB_Camp_NightMode(1) ")
+        _Dbg("CheckNotifyNightEvents - Skipping due to DB_Camp_NightMode(1) ")
         CampEvents.Cleanup()
         return
     end
 
-    local validEvents = CampEvents.FindValidNightEvents(true)
+    local validEvents = CampEvents.FindValidNightEvents()
     local numValidEvents = #validEvents or 0
 
-    _P("Number of Camp Night Events waiting to play: " .. (numValidEvents))  -- DEBUG
+    _I("Number of Camp Night Events waiting to play: " .. (numValidEvents))  -- DEBUG
 
     if numValidEvents > 0 then
         CampEvents.NotifyPlayer()
@@ -270,8 +280,8 @@ function RegisterNightEventsCheck(proc_event, num_params, before_or_after)
         -- if not string.find(who, GetHostCharacter(), _, true) then return end
         if proc_event == "PROC_Subregion_Entered" and not utils.IsUUIDPlayer(who) then return end
 
-        _P(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
-        CampEvents.CheckNotifyNightEvents(true)
+        _Dbg(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
+        CampEvents.CheckNotifyNightEvents()
     end)
 end
 CampEvents.RegisterNightEventsCheck = RegisterNightEventsCheck
@@ -290,6 +300,7 @@ local function Init()
     -- RegisterNightEventsCheck("PROC_CampNight_LastDialogPlayed", nil, "after")
     -- RegisterNightEventsCheck("PROC_CampNight_ForceComplete", 1, "after")
     RegisterNightEventsCheck("PROC_CampNight_ClearCampNight", 1, "after")
+
 
 end
 CampEvents.Init = Init
