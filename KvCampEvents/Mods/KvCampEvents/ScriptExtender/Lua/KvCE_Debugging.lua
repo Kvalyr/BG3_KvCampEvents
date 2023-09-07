@@ -1,30 +1,69 @@
 -- print("======== KvCE START Debugging")
-
 local DB = KVS.DB
 
 Debug = {}
 
-
-local function RegisterPrintOnEvent(proc_event, num_params, before_or_after, post_func)
-    if num_params == nil then num_params = 0 end
-    if not before_or_after then before_or_after = "before" end
+local function RegisterPrintOnEvent( proc_event, num_params, before_or_after, post_func )
+    if num_params == nil then
+        num_params = 0
+    end
+    if not before_or_after then
+        before_or_after = "before"
+    end
     -- if post_func == nil then do_dump_dbs = false end
 
-    Ext.Osiris.RegisterListener(proc_event, num_params, before_or_after, function (...)
-        print("======================================")
-        _P(proc_event, "<"..string.upper(before_or_after)..">", "Params:", ...)
-        print("=================")
+    Ext.Osiris.RegisterListener(
+        proc_event, num_params, before_or_after, function( ... )
+            print("======================================")
+            _P(proc_event, "<" .. string.upper(before_or_after) .. ">", "Params:", ...)
+            print("=================")
 
-        if type(post_func) == "function" then
-            post_func()
+            if type(post_func) == "function" then
+                post_func()
+            end
+
         end
-
-    end)
+    )
 end
 
+function Debug.DumpDialogEventQRY( qry )
+    _DBG(qry, Osi[qry](newDialogEvent))
+end
 
-function DebugCampNightProcs()
-    -- Mods.KvCampEvents.KVS.Output.SetLogLevel(3)
+-- DEBUG
+local function Alternate_QRY_CampNight_MeetsRequirements( newDialogEvent )
+
+    local function dump( qry )
+        _DBG(qry, Osi[qry](newDialogEvent))
+    end
+
+    -- NOT in fallback
+    if not Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent) then
+        _DBG("NOT in fallback")
+        dump("QRY_CampNight_MeetsRequirements_IsInFallback")
+        dump("QRY_CampNight_MeetsRequirements_Flags")
+        dump("QRY_CampNight_MeetsRequirements_Approval")
+        dump("QRY_CampNight_MeetsRequirements_Partner")
+        dump("QRY_CampNight_MeetsRequirements_Dating")
+        dump("QRY_CampNight_MeetsRequirements_StartDating")
+        dump("QRY_CampNight_MeetsRequirements_SameUser")
+        -- Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent)
+        -- Osi.QRY_CampNight_MeetsRequirements_Flags(newDialogEvent)
+        -- Osi.QRY_CampNight_MeetsRequirements_Approval(newDialogEvent)
+        -- Osi.QRY_CampNight_MeetsRequirements_Partner(newDialogEvent)
+        -- Osi.QRY_CampNight_MeetsRequirements_Dating(newDialogEvent)
+        -- Osi.QRY_CampNight_MeetsRequirements_StartDating(newDialogEvent)
+        -- Osi.QRY_CampNight_MeetsRequirements_SameUser(newDialogEvent)
+    else
+        _DBG("in fallback")
+        dump("QRY_CampNight_MeetsRequirements_IsInFallback")
+        dump("QRY_FallbackCamp_CampNightMeetsRequirements")
+        -- Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent)
+        -- Osi.QRY_FallbackCamp_CampNightMeetsRequirements(newDialogEvent)
+    end
+end
+
+function Debug.Enable()
 
     local campQueuedDBs = {}
     -- campQueuedDBs["DB_CampNight_Camp"] = 2
@@ -46,7 +85,7 @@ function DebugCampNightProcs()
     -- campQueuedDBs["DB_CampNight_Requirement"] = 4
 
     local function DumpCampQueueDBs()
-        print("Active Camp:" .. (GetActiveCamp()or "[UNKNOWN]"))
+        print("Active Camp:" .. (GetActiveCamp() or "[UNKNOWN]"))
         for key, num_params in pairs(campQueuedDBs) do
             _P("DB Dump: " .. "'" .. key .. "'")
             DB.Dump(key, num_params)
@@ -54,10 +93,26 @@ function DebugCampNightProcs()
         end
     end
 
-    RegisterPrintOnEvent("DB_Camp_QueuedNight", 1, "before", function() DB.Dump("DB_Camp_QueuedNight", 1) end)
-    RegisterPrintOnEvent("DB_Camp_QueuedNight", 1, "after", function() DB.Dump("DB_Camp_QueuedNight", 1) end)
-    RegisterPrintOnEvent("DB_Camp_QueuedAvatarDream", 1, "before", function() DB.Dump("DB_Camp_QueuedAvatarDream", 1) end)
-    RegisterPrintOnEvent("DB_Camp_QueuedAvatarDream", 1, "after", function() DB.Dump("DB_Camp_QueuedAvatarDream", 1) end)
+    RegisterPrintOnEvent(
+        "DB_Camp_QueuedNight", 1, "before", function()
+            DB.Dump("DB_Camp_QueuedNight", 1)
+        end
+    )
+    RegisterPrintOnEvent(
+        "DB_Camp_QueuedNight", 1, "after", function()
+            DB.Dump("DB_Camp_QueuedNight", 1)
+        end
+    )
+    RegisterPrintOnEvent(
+        "DB_Camp_QueuedAvatarDream", 1, "before", function()
+            DB.Dump("DB_Camp_QueuedAvatarDream", 1)
+        end
+    )
+    RegisterPrintOnEvent(
+        "DB_Camp_QueuedAvatarDream", 1, "after", function()
+            DB.Dump("DB_Camp_QueuedAvatarDream", 1)
+        end
+    )
 
     RegisterPrintOnEvent("PROC_Camp_EndEvening", nil, "before", nil)
     RegisterPrintOnEvent("PROC_Camp_EndEvening", nil, "after", nil)
@@ -83,14 +138,25 @@ function DebugCampNightProcs()
     RegisterPrintOnEvent("PROC_CampNight_ClearCampNight", 1, "before", DumpCampQueueDBs)
     RegisterPrintOnEvent("PROC_CampNight_ClearCampNight", 1, "after", DumpCampQueueDBs)
 
-    RegisterPrintOnEvent("DB_Camp_RequiredTalks", 1, "before", function() DB.Dump("DB_Camp_RequiredTalks", 1) end)
-    RegisterPrintOnEvent("DB_Camp_RequiredTalks", 1, "after", function() DB.Dump("DB_Camp_RequiredTalks", 1) end)
-    RegisterPrintOnEvent("DB_Camp_RequiredTalks", 2, "before", function() DB.Dump("DB_Camp_RequiredTalks", 2) end)
-    RegisterPrintOnEvent("DB_Camp_RequiredTalks", 2, "after", function() DB.Dump("DB_Camp_RequiredTalks", 2) end)
+    RegisterPrintOnEvent(
+        "DB_Camp_RequiredTalks", 1, "before", function()
+            DB.Dump("DB_Camp_RequiredTalks", 1)
+        end
+    )
+    RegisterPrintOnEvent(
+        "DB_Camp_RequiredTalks", 1, "after", function()
+            DB.Dump("DB_Camp_RequiredTalks", 1)
+        end
+    )
+    RegisterPrintOnEvent(
+        "DB_Camp_RequiredTalks", 2, "before", function()
+            DB.Dump("DB_Camp_RequiredTalks", 2)
+        end
+    )
+    RegisterPrintOnEvent(
+        "DB_Camp_RequiredTalks", 2, "after", function()
+            DB.Dump("DB_Camp_RequiredTalks", 2)
+        end
+    )
 end
 Debug.Enable = DebugCampNightProcs
-
-
--- DebugCampNightProcs()
-
--- print("==== KvCE END Debugging")

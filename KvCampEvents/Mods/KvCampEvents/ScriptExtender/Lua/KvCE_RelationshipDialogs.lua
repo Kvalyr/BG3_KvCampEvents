@@ -1,19 +1,12 @@
 -- TODO :)
-
--- print("======== KvCE START RelationshipDialogs")
-
-
+-- _DBG("======== KvCE START RelationshipDialogs")
 -- function GetCampRequiredTalks()
 --     local tab1 = Osi.DB_Camp_RequiredTalks:Get(nil)
 --     local tab2 = Osi.DB_Camp_RequiredTalks:Get(nil, nil)
 -- end
-
-
 -- IF DB_Camp_RequiredTalks(_Var1, _, _Var1, _Var1, _Var1)
 -- THEN
 --     PROC_LoopEffect(EFFECTRESOURCEGUID_VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80, _Var1, "GLO_Camp_RequiredTalk", "__ANY__", "Dummy_OverheadFX");
-
-
 local function GetPendingRelationshipDialogs()
     -- PROC PROC_Test_RelationshipDialog_Queue()
     --     AND DB_RelationshipDialog_Queue(_Var1, _Var2, _Var3, _Var4, _Var5, _Var6, _Var1, _Var1, _Var1, _Var1)
@@ -47,7 +40,6 @@ local function GetPendingRelationshipDialogs()
     --     NOT DB_RelationshipDialog_Queue(_Var1, _Var2, _Var3, "CAMP", _Var4, _Var5);
     --     PROC_LoopEffect(EFFECTRESOURCEGUID_VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80, _Var1, "RelationshipMarker", "__ANY__", "Dummy_OverheadFX");
 
-
 end
 
--- print("==== KvCE END RelationshipDialogs")
+-- _DBG("==== KvCE END RelationshipDialogs")

@@ -1,287 +1,185 @@
-print("======== KvCE START Main")
-
 local _E = KVS.Output.Error
 local _W = KVS.Output.Warning
 local _I = KVS.Output.Info
-local _Dbg = KVS.Output.Debug
+local _DBG = KVS.Output.Debug
 local DB = KVS.DB
-local utils = KVS.Utils
+local Events = KVS.Events
+local Utils = KVS.Utils
+local Table = KVS.Table
 
+-- _DBG("======== KvCE START Main")
 
-local function GetActiveCamp()
+local Notifications = Notifications
+local RE = Reimplementations
+local State = State
+
+-- ==================================================
+local CampEvents = CampEvents
+-- ==================================================
+
+function CampEvents.GetActiveCamp()
     local activeCampTable = Osi.DB_ActiveCamp:Get(nil)
-    if not activeCampTable then return end
+    if not activeCampTable then
+        return
+    end
     activeCampTable = activeCampTable[1] -- [1]
-    if not activeCampTable then return end
+    if not activeCampTable then
+        return
+    end
     activeCampTable = activeCampTable[1] -- [1][1]
 
     -- return Osi.DB_ActiveCamp:Get(nil)[1][1]
     return activeCampTable or ""
 end
 
-local function GetPossibleCampNightEventsForCamp(campsite_str)
-    return Osi.DB_CampNight_Camp:Get(nil, campsite_str)
-end
-local function GetPossibleCampNightEventsForCamp_Current()
-    return GetPossibleCampNightEventsForCamp(GetActiveCamp())
-end
-CampEvents.GetActiveCamp = GetActiveCamp
-CampEvents.GetPossibleCampNightEventsForCamp = GetPossibleCampNightEventsForCamp
-CampEvents.GetPossibleCampNightEventsForCamp_Current = GetPossibleCampNightEventsForCamp_Current
-
-
--- ================================================================
---
-function IsValidCampNightEvent(currentCamp, newDialogEvent, newDialogPriority, ignorePrevious)
-    if ignorePriority == nil then ignorePriority = false end
-
-    -- local newDialogEvent -- _Var3
-    -- local newDialogPriority -- _Var4
-
-    -- AND NOT DB_FallbackCamp_InCamp(_, _, _, _, _)
-    if not DB.IsEmpty("DB_FallbackCamp_InCamp", 1) then return end
-
-    -- TODO: This is probably redundant? Likely only part of the Osiris proc for sanity-checking
-    -- AND DB_ActiveCamp(_Var2, _, _, _, _)
-    if not DB.Bool("DB_ActiveCamp", currentCamp) then return end
-
-    -- Dialog event isn't in DB_CampNight at all
-    -- AND DB_CampNight(_Var3, _Var4, _, _, _)
-    if not DB.Bool("DB_CampNight", newDialogEvent, newDialogPriority) then return end
-
-    -- Dialog event isn't valid for current camp location
-    -- AND DB_CampNight_Camp(_Var3, _Var2, _, _, _)
-    if not DB.Bool("DB_CampNight_Camp", newDialogEvent, currentCamp) then return end
-
-    -- Dialog event already queued
-    -- AND NOT DB_Camp_QueuedNight(_Var3, _, _, _, _)
-    if DB.Bool("DB_Camp_QueuedNight", newDialogEvent) then return end
-
-    -- Dialog event already completed
-    if DB.Bool("DB_CampNight_Completed", newDialogEvent) then return end
-
-    if not ignorePrevious then
-
-        if not DB.Bool("DB_Camp_BestCampNight", previousBestCampNightDialog, previousBestCampNightPriority ) then
-            Osi.DB_Camp_BestCampNight("Fake_00000000-0000-0000-0000-000000000000", -1)
-            return
-        end
-
-        local previousBestCampNightTable = Osi.DB_Camp_BestCampNight:Get(nil,nil)[1]
-        local previousBestCampNightDialog = previousBestCampNightTable[1] -- _Var5
-        local previousBestCampNightPriority = previousBestCampNightTable[2] -- _Var6
-
-        _Dbg("IsValidCampNightEvent - Previous Best: '" .. previousBestCampNightDialog .. "'")
-
-        -- AND DB_Camp_BestCampNight(_Var5, _Var6, _, _, _)
-        if not DB.Bool("DB_Camp_BestCampNight", previousBestCampNightDialog, previousBestCampNightPriority ) then return end
-
-        -- AND  newDialogPriority > previousBestCampNightPriority
-        if not (newDialogPriority > previousBestCampNightPriority) then
-            _Dbg("IsValidCampNightEvent - Ignoring: '" .. newDialogEvent .. "' due to priority.")
-            return
-        end
-
-    end
-
-    -- AND NOT QRY_CampNight_HasExclusivityProblem(_Var3, _, _, _, _)
-    if Osi.QRY_CampNight_HasExclusivityProblem(newDialogEvent) then return end
-
-    -- AND NOT QRY_CampNight_HasEveningReservedSpeakerProblem(_Var3, _, _, _, _)
-    if Osi.QRY_CampNight_HasEveningReservedSpeakerProblem(newDialogEvent) then return end
-
-    -- AND NOT QRY_CampNight_HasSleepReservedSpeakerProblem(_Var3, _, _, _, _)
-    if Osi.QRY_CampNight_HasSleepReservedSpeakerProblem(newDialogEvent) then return end
-
-    -- AND NOT QRY_CampNight_HasMorningReservedSpeakerProblem(_Var3, _, _, _, _)
-    if Osi.QRY_CampNight_HasMorningReservedSpeakerProblem(newDialogEvent) then return end
-
-    -- AND QRY_CampNight_MeetsRequirements(_Var3, _, _, _, _)
-    if not Osi.QRY_CampNight_MeetsRequirements(newDialogEvent) then return end
-
-    -- AND NOT QRY_CampNight_AllSpeakersMissing(_Var3, _, _, _, _)
-    if Osi.QRY_CampNight_AllSpeakersMissing(newDialogEvent) then return end
-
-    -- THEN
-
-    -- NOT DB_Camp_BestCampNight(_Var5, _Var6);
-    -- Not needed for speculative
-
-    -- DB_Camp_BestCampNight(_Var3, _Var4);
-    -- Not needed for speculative - Return/print instead
-    -- _Dbg("IsValidCampNightEvent - Would add: '" .. newDialogEvent .. "' to DB_Camp_BestCampNight.")
-
-    return true
-end
-CampEvents.IsValidCampNightEvent = IsValidCampNightEvent
-
-local function IsNightMode()
-    return DB.Bool("DB_Camp_NightMode", 1)
+function CampEvents.PlayerInCamp()
+    return DB.Bool("DB_PlayerInCamp", nil)
 end
 
--- local function IsJustWokeUp()
---     return DB.Bool("DB_CAMP_JustWokeUp", 1)
+-- function CampEvents.GetPossibleCampNightEventsForCamp( campsite_str )
+--     return Osi.DB_CampNight_Camp:Get(nil, campsite_str)
+-- end
+-- function CampEvents.GetPossibleCampNightEventsForCamp_Current()
+--     return CampEvents.GetPossibleCampNightEventsForCamp(CampEvents.GetActiveCamp())
 -- end
 
 
--- ================================================================
--- Player Exclamation effects
-local function AddExclamationOverCharacter(character_uuid)
-    if not character_uuid then
-        character_uuid = GetHostCharacter()
-    end
+-- ==================================================
+-- ==================================================
 
-    local existingLoopEffectHandler = CampEvents.GetExclamationLoopEffectHandle()
-    if not existingLoopEffectHandler then
-        Osi.PROC_LoopEffect("EFFECTRESOURCEGUID_VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80", character_uuid, "RelationshipMarker", "__ANY__", "Dummy_OverheadFX");
+local DB_InCamp_TemporaryAdded = {}
+local function ResetDBInCampTemporary()
+    -- Empty out the temp table
+    if #DB_InCamp_TemporaryAdded > 0 then
+        for k in pairs(DB_InCamp_TemporaryAdded) do
+            DB_InCamp_TemporaryAdded[k] = nil
+        end
     end
 end
-CampEvents.AddExclamationOverCharacter = AddExclamationOverCharacter
 
-
-local function GetExclamationLoopEffectHandle(character_uuid)
-    local loopEffectTable = Osi.DB_LoopEffect:Get(
-        character_uuid,
-        nil,
-        "RelationshipMarker",
-        nil,
-        "EFFECTRESOURCEGUID_VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80",
-        "Dummy_OverheadFX",
-        nil
-    )
-
-    if not loopEffectTable then
-        -- _Dbg("GetExclamationLoopEffectHandle", "not loopEffectTable") -- DEBUG
+local function TemporarilyAddToDBInCamp()
+    if CampEvents.PlayerInCamp() then
         return
     end
-    loopEffectTable = loopEffectTable[1]
-    if not loopEffectTable then
-        -- _Dbg("GetExclamationLoopEffectHandle", "not loopEffectTable[1]") -- DEBUG
-        return
-    end
-    local loop_effect_handle = loopEffectTable[2]
-    if not loop_effect_handle then
-        -- _Dbg("GetExclamationLoopEffectHandle", "not loop_effect_handle") -- DEBUG
-        return
-    end
+    ResetDBInCampTemporary()
 
-    return loop_effect_handle
+    local partyMembers = Utils.GetPartyMembers()
+    local campMembers = Utils.GetCampMembers()
+    local campMembers_inverted = Table.Invert(campMembers)
+
+    for k, partyMemberUUID in pairs(partyMembers) do
+        if not Table.HasKey(campMembers_inverted, partyMemberUUID) then
+            table.insert(DB_InCamp_TemporaryAdded, partyMemberUUID)
+
+            -- Insert to DB_InCamp
+            Osi.DB_InCamp(partyMemberUUID)
+        end
+    end
 end
-CampEvents.GetExclamationLoopEffectHandle = GetExclamationLoopEffectHandle
 
-local function RemoveExclamationOverCharacter(character_uuid, loop_effect_handle)
-    if not character_uuid then
-        character_uuid = GetHostCharacter()
+local function RestoreDBInCamp()
+    -- Delete our temporary additions from DB_InCamp
+    for k, v in pairs(DB_InCamp_TemporaryAdded) do
+        -- _DBG("Would delete from DB_InCamp:", v)
+        Osi.DB_InCamp:Delete(v)
     end
-
-    if not loop_effect_handle then
-        loop_effect_handle = GetExclamationLoopEffectHandle(character_uuid)
-    end
-
-    if loop_effect_handle ~= nil then
-        Osi.PROC_StopLoopEffect(loop_effect_handle)
-
-        Osi.DB_LoopEffect:Delete(
-            character_uuid,
-            loop_effect_handle,
-            "RelationshipMarker",
-            "__ANY__",
-            "EFFECTRESOURCEGUID_VFX_UI_ExclamationMark_01_a3018cf0-3a25-06ee-206a-3dd079332d80",
-            "Dummy_OverheadFX",
-            1.0
-        )
-    end
-
+    ResetDBInCampTemporary()
 end
-CampEvents.RemoveExclamationOverCharacter = RemoveExclamationOverCharacter
--- ================================
+
+-- ==================================================
+-- ==================================================
 
 -- ================
--- NotifyPlayer
-local function NotifyPlayer()
-    _Dbg("CampEvents.NotifyPlayer")  -- DEBUG
-    local character_uuid = GetHostCharacter()
+-- Add statuses, exclamation overhead, etc.
+function CampEvents.NotifyPlayer()
+    _DBG("CampEvents.NotifyPlayer") -- DEBUG
+    if CampEvents.CheckUninstalled("CampEvents.NotifyPlayer()") then
+        return
+    end
+
+    local character_uuid = Utils.GetPlayer()
     -- TODO: Differentiate between Camp Events and Relationship Dialogs
 
-    Osi.ApplyStatus(character_uuid, "KvCE_Notification_CampNightEvents_NoOverhead", -1)
-
-    -- Osi.ApplyStatus(character_uuid, "KvCE_Notification_RelationshipDialogues_NoOverhead", -1)
-
-    AddExclamationOverCharacter()
+    Notifications.AddStatusEffect_CampNightEvents(character_uuid)
+    -- Notifications.AddStatusEffect_RelationshipDialogues(character_uuid)
+    Notifications.AddExclamationOverCharacter(character_uuid)
 end
-CampEvents.NotifyPlayer = NotifyPlayer
-
---  Osi.ApplyStatus(GetHostCharacter(), "KvCampEvents_Notification_CampNightEvents", -1)
 
 -- ================
--- Cleanup
-local function Cleanup()
-    _Dbg("CampEvents.Cleanup")  -- DEBUG
-    local character_uuid = GetHostCharacter()
+--
+function CampEvents.Cleanup()
+    _DBG("CampEvents.Cleanup") -- DEBUG
+    local character_uuid = Utils.GetPlayer()
+
     -- TODO: Differentiate between Camp Events and Relationship Dialogs
-
-    Osi.RemoveStatus(character_uuid, "KvCampEvents_Notification_CampNightEvents")
-    Osi.RemoveStatus(character_uuid, "KvCE_Notification_CampNightEvents_NoOverhead")
-
-    -- Osi.RemoveStatus(character_uuid, "KvCampEvents_Notification_RelationshipDialogues")
-    -- Osi.RemoveStatus(character_uuid, "KvCE_Notification_RelationshipDialogues_NoOverhead")
-
-    RemoveExclamationOverCharacter(character_uuid)
+    Notifications.RemoveStatusEffect_CampNightEvents(character_uuid)
+    Notifications.RemoveStatusEffect_RelationshipDialogues(character_uuid)
+    Notifications.RemoveExclamationOverCharacter(character_uuid)
 end
-CampEvents.Cleanup = Cleanup
-
 
 -- Mods.KvCampEvents.CampEvents.FindValidNightEvents()
 -- ================
--- FindValidNightEvents
-local function FindValidNightEvents()
+--
+function CampEvents.FindValidNightEvents()
     local eventsInDB = DB.GetRows("DB_CampNight", 2)
     local numEvents = #eventsInDB
 
     local validEvents = {}
 
-    if Osi.QRY_Camp_IsPlayerBlockedFromTeleportToCamp(GetHostCharacter()) then
-        _Dbg("FindValidNightEvents() - Skipping due to QRY_Camp_IsPlayerBlockedFromTeleportToCamp == true")
+    if Osi.QRY_Camp_IsPlayerBlockedFromTeleportToCamp(Utils.GetPlayer()) then
+        _DBG("FindValidNightEvents() - Skipping due to QRY_Camp_IsPlayerBlockedFromTeleportToCamp == true")
         return validEvents
     end
 
-    local currentCamp = GetActiveCamp()  -- _Var2
+    local currentCamp = CampEvents.GetActiveCamp() -- _Var2
     if not currentCamp or currentCamp == "" then
-        _Dbg("FindValidNightEvents() - Skipping due to nil currentCamp")
+        _DBG("FindValidNightEvents() - Skipping due to nil currentCamp")
         return validEvents
     end
 
+    TemporarilyAddToDBInCamp()
     for idx, subTable in pairs(eventsInDB) do
         local eventUUID = subTable[1]
         local eventPriority = subTable[2]
         local ignorePrevious = true
 
-        if CampEvents.IsValidCampNightEvent(currentCamp, eventUUID, eventPriority, ignorePrevious) then
+        if RE.PROC_CampNight_DecideCampNight_Recursive(currentCamp, eventUUID, eventPriority, ignorePrevious) then
             table.insert(validEvents, eventUUID)
         end
     end
+    RestoreDBInCamp()
+
     if KVS.Output.GetLogLevel() >= 3 then
-        _Dbg("FindValidNightEvents() - Events:")
+        _DBG("FindValidNightEvents() - Events:")
         _D(validEvents)
     end
     return validEvents
 end
-CampEvents.FindValidNightEvents = FindValidNightEvents
 
+-- local function IsJustWokeUp()
+--     return DB.Bool("DB_CAMP_JustWokeUp", 1)
+-- end
+local function IsNightMode()
+    return DB.Bool("DB_Camp_NightMode", 1)
+end
 
--- Mods.KvCampEvents.CampEvents.CheckNotifyNightEvents()
 -- ================
--- CheckNotifyNightEvents
-local function CheckNotifyNightEvents()
+-- Main callback triggered by game events to check for pending night events, and notify player if necessary
+function CampEvents.CheckNotifyNightEvents()
+
+    if CampEvents.CheckUninstalled("CampEvents.CheckNotifyNightEvents()") then
+        return
+    end
+
     if IsNightMode() then
-        _Dbg("CheckNotifyNightEvents - Skipping due to DB_Camp_NightMode(1) ")
+        _DBG("CheckNotifyNightEvents - Skipping due to DB_Camp_NightMode(1) ")
         CampEvents.Cleanup()
         return
     end
 
     -- if IsJustWokeUp() then
     --     -- This remains true from waking up until requesting to end the day, outside of special circumstances - Not useful for us
-    --     _Dbg("CheckNotifyNightEvents - Skipping due to DB_CAMP_JustWokeUp(1) ")
+    --     _DBG("CheckNotifyNightEvents - Skipping due to DB_CAMP_JustWokeUp(1) ")
     --     CampEvents.Cleanup()
     --     return
     -- end
@@ -289,7 +187,7 @@ local function CheckNotifyNightEvents()
     local validEvents = CampEvents.FindValidNightEvents()
     local numValidEvents = #validEvents or 0
 
-    _I("Number of Camp Night Events waiting to play: " .. (numValidEvents))  -- DEBUG
+    _I("Number of Camp Night Events waiting to play: " .. (numValidEvents)) -- DEBUG
 
     if numValidEvents > 0 then
         CampEvents.NotifyPlayer()
@@ -297,40 +195,68 @@ local function CheckNotifyNightEvents()
         CampEvents.Cleanup()
     end
 end
-CampEvents.CheckNotifyNightEvents = CheckNotifyNightEvents
 
-function RegisterNightEventsCheck(proc_event, num_params, before_or_after)
-    if num_params == nil then num_params = 0 end
-    if not before_or_after then before_or_after = "after" end
+function CampEvents.RegisterNightEventsCheck( proc_event, num_params, before_or_after )
+    if num_params == nil then
+        num_params = 0
+    end
+    if not before_or_after then
+        before_or_after = "after"
+    end
 
-    Ext.Osiris.RegisterListener(proc_event, num_params, before_or_after, function (who, ...)
-        -- if not string.find(who, GetHostCharacter(), _, true) then return end
-        if proc_event == "PROC_Subregion_Entered" and not utils.IsUUIDPlayer(who) then return end
+    Ext.Osiris.RegisterListener(
+        proc_event, num_params, before_or_after, function( who, ... )
+            if proc_event == "PROC_Subregion_Entered" and not Utils.IsUUIDPlayer(who) then
+                return
+            end
 
-        _Dbg(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
-        CampEvents.CheckNotifyNightEvents()
-    end)
+            _DBG(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
+            CampEvents.CheckNotifyNightEvents()
+        end
+    )
 end
-CampEvents.RegisterNightEventsCheck = RegisterNightEventsCheck
 
-
-local function Init()
-    -- RegisterNightEventsCheck("SetFlag", 2, "after")
-    -- RegisterNightEventsCheck("ClearFlag", 2, "after")
-    RegisterNightEventsCheck("PROC_Subregion_Entered", 2, "after")
-    RegisterNightEventsCheck("SavegameLoaded", 0, "after")
-    RegisterNightEventsCheck("DialogEnded", 2, "after")
-    -- RegisterNightEventsCheck("PROC_Camp_SwitchNightMode", 0, "after")
-    -- RegisterNightEventsCheck("DB_Camp_NightMode", 0, "after")
-
-    RegisterNightEventsCheck("PROC_Camp_PlayCampNight", 0, "after")
-    -- RegisterNightEventsCheck("PROC_CampNight_LastDialogPlayed", nil, "after")
-    -- RegisterNightEventsCheck("PROC_CampNight_ForceComplete", 1, "after")
-    RegisterNightEventsCheck("PROC_CampNight_ClearCampNight", 1, "after")
-
-
+function CampEvents.CheckUninstalled( caller )
+    if State.IsUninstalled() then
+        _DBG((caller or "[Unknown]") .. " - CampEvents.CheckUninstalled() - KvCE in UNINSTALLED state - Skipping to cleanup")
+        CampEvents.Cleanup()
+        return true
+    end
+    return false
 end
-CampEvents.Init = Init
+
+local function PreSave_Cleanup()
+    _I("Doing cleanup before save.")
+    CampEvents.Cleanup()
+end
+
+local function PostSave_CheckNotify()
+    _I("Checking for events after save.")
+    CampEvents.CheckNotifyNightEvents()
+end
 
 
-print("==== KvCE END Main")
+function CampEvents.Init()
+    if CampEvents.CheckUninstalled("CampEvents.Init()") then
+        return
+    end
+
+    Events.RegisterGameStateChanged("Running", "Save", PreSave_Cleanup)
+    Events.RegisterGameStateChanged("Save", "Running", PostSave_CheckNotify)
+
+    -- CampEvents.RegisterNightEventsCheck("SetFlag", 2, "after")
+    -- CampEvents.RegisterNightEventsCheck("ClearFlag", 2, "after")
+    CampEvents.RegisterNightEventsCheck("PROC_Subregion_Entered", 2, "after")
+    CampEvents.RegisterNightEventsCheck("LevelGameplayStarted", 2, "after")
+    CampEvents.RegisterNightEventsCheck("SavegameLoaded", 0, "after")
+    CampEvents.RegisterNightEventsCheck("DialogEnded", 2, "after")
+    -- CampEvents.RegisterNightEventsCheck("PROC_Camp_SwitchNightMode", 0, "after")
+    -- CampEvents.RegisterNightEventsCheck("DB_Camp_NightMode", 0, "after")
+
+    CampEvents.RegisterNightEventsCheck("PROC_Camp_PlayCampNight", 0, "after")
+    -- CampEvents.RegisterNightEventsCheck("PROC_CampNight_LastDialogPlayed", nil, "after")
+    -- CampEvents.RegisterNightEventsCheck("PROC_CampNight_ForceComplete", 1, "after")
+    CampEvents.RegisterNightEventsCheck("PROC_CampNight_ClearCampNight", 1, "after")
+end
+
+-- _DBG("==== KvCE END Main")

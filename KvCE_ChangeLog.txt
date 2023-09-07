@@ -1,3 +1,14 @@
+v0.4
+* Major overhaul of underlying code. Should be more performant and exhibit fewer bugs.
+* Added configuration options
+* Added uninstallation logic and more rigorous self-cleanup before saving
+* Bugfix: Prevent exclamation mark appearing on party members other than the main character (Note: Untested in multiplayer)
+* Russian localization strings by 3asranka and adamaskoff
+
+v0.3.1
+    * Added German localization strings by Aurantea
+    * Added Traditional Chinese localization strings by mob87818 ( https://www.nexusmods.com/users/20565139 )
+
 v0.3
     * Improved efficiency of main event function
     * Added safeguard against error when in a location with no campsites (e.g.; the prologue Nautiloid)

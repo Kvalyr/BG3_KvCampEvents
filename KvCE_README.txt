@@ -17,9 +17,18 @@ A future version of this mod will adjust the game logic to allow multiple events
 
 Installation:
 * Install BG3 Mod Manager (Vortex might work, but I don't use it and have no interest in troubleshooting it. If you use it, you're on your own.)
-* Install BG3 Script Extender
+* Install BG3 Script Extender (You can install this easily using BG3 Mod Manager)
 
-If you don't know how to install mods or the script extender, go learn that elsewhere first.
+
+Uninstallation:
+* See this article: https://www.nexusmods.com/baldursgate3/articles/168
+* It's almost never a good idea to remove mods from an ongoing playthrough.
+* This one should be safe to remove in most cases as of v0.4, but there are no promises.
+
+
+Configuration:
+* See this article for instructions on configuring the mod: https://www.nexusmods.com/baldursgate3/articles/170
+* i.e.; Enabling/Disabling the exclamation mark, statuses, etc.
 
 
 FAQ:
@@ -50,7 +59,6 @@ A: Do a 'partial rest' without using camp supplies. You'll still trigger camp ev
 
 Planned Features:
 
-* Configuration: Toggle overhead "!", Toggle statuses
 * Separate logic for pending 'Relationship Dialogue' events. i.e.; Companions wanting to talk to you.
 * New logic to allow multiple events to play out during a single rest/night.
 
