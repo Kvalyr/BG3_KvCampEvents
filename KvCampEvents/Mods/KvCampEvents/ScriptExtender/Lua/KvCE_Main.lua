@@ -43,7 +43,6 @@ end
 --     return CampEvents.GetPossibleCampNightEventsForCamp(CampEvents.GetActiveCamp())
 -- end
 
-
 -- ==================================================
 -- ==================================================
 
@@ -121,8 +120,6 @@ end
 -- ================
 --
 function CampEvents.FindValidNightEvents()
-    local eventsInDB = DB.GetRows("DB_CampNight", 2)
-    local numEvents = #eventsInDB
 
     local validEvents = {}
 
@@ -137,7 +134,14 @@ function CampEvents.FindValidNightEvents()
         return validEvents
     end
 
-    TemporarilyAddToDBInCamp()
+    local eventsInDB = DB.GetRows("DB_CampNight", 2)
+    local numEvents = #eventsInDB
+
+    if numEvents < 1 then
+        return validEvents
+    end
+
+    -- TemporarilyAddToDBInCamp()
     for idx, subTable in pairs(eventsInDB) do
         local eventUUID = subTable[1]
         local eventPriority = subTable[2]
@@ -147,7 +151,7 @@ function CampEvents.FindValidNightEvents()
             table.insert(validEvents, eventUUID)
         end
     end
-    RestoreDBInCamp()
+    -- RestoreDBInCamp()
 
     if KVS.Output.GetLogLevel() >= 3 then
         _DBG("FindValidNightEvents() - Events:")
@@ -177,13 +181,6 @@ function CampEvents.CheckNotifyNightEvents()
         return
     end
 
-    -- if IsJustWokeUp() then
-    --     -- This remains true from waking up until requesting to end the day, outside of special circumstances - Not useful for us
-    --     _DBG("CheckNotifyNightEvents - Skipping due to DB_CAMP_JustWokeUp(1) ")
-    --     CampEvents.Cleanup()
-    --     return
-    -- end
-
     local validEvents = CampEvents.FindValidNightEvents()
     local numValidEvents = #validEvents or 0
 
@@ -196,24 +193,17 @@ function CampEvents.CheckNotifyNightEvents()
     end
 end
 
+local function NightEventsCallback( who, ... )
+    if proc_event == "PROC_Subregion_Entered" and not Utils.IsUUIDPlayer(who) then
+        return
+    end
+
+    _DBG(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
+    CampEvents.CheckNotifyNightEvents()
+end
+
 function CampEvents.RegisterNightEventsCheck( proc_event, num_params, before_or_after )
-    if num_params == nil then
-        num_params = 0
-    end
-    if not before_or_after then
-        before_or_after = "after"
-    end
-
-    Ext.Osiris.RegisterListener(
-        proc_event, num_params, before_or_after, function( who, ... )
-            if proc_event == "PROC_Subregion_Entered" and not Utils.IsUUIDPlayer(who) then
-                return
-            end
-
-            _DBG(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
-            CampEvents.CheckNotifyNightEvents()
-        end
-    )
+    Ext.Osiris.RegisterListener(proc_event, num_params or 0, before_or_after or "after", NightEventsCallback)
 end
 
 function CampEvents.CheckUninstalled( caller )
@@ -235,28 +225,31 @@ local function PostSave_CheckNotify()
     CampEvents.CheckNotifyNightEvents()
 end
 
+CampEvents.initDone = false
 
 function CampEvents.Init()
-    if CampEvents.CheckUninstalled("CampEvents.Init()") then
+    if CampEvents.initDone or CampEvents.CheckUninstalled("CampEvents.Init()") then
         return
     end
 
     Events.RegisterGameStateChanged("Running", "Save", PreSave_Cleanup)
     Events.RegisterGameStateChanged("Save", "Running", PostSave_CheckNotify)
 
-    -- CampEvents.RegisterNightEventsCheck("SetFlag", 2, "after")
-    -- CampEvents.RegisterNightEventsCheck("ClearFlag", 2, "after")
     CampEvents.RegisterNightEventsCheck("PROC_Subregion_Entered", 2, "after")
     CampEvents.RegisterNightEventsCheck("LevelGameplayStarted", 2, "after")
     CampEvents.RegisterNightEventsCheck("SavegameLoaded", 0, "after")
     CampEvents.RegisterNightEventsCheck("DialogEnded", 2, "after")
+    CampEvents.RegisterNightEventsCheck("PROC_Camp_PlayCampNight", 0, "after")
+    CampEvents.RegisterNightEventsCheck("PROC_CampNight_ClearCampNight", 1, "after")
+
+    -- CampEvents.RegisterNightEventsCheck("SetFlag", 2, "after")
+    -- CampEvents.RegisterNightEventsCheck("ClearFlag", 2, "after")
     -- CampEvents.RegisterNightEventsCheck("PROC_Camp_SwitchNightMode", 0, "after")
     -- CampEvents.RegisterNightEventsCheck("DB_Camp_NightMode", 0, "after")
-
-    CampEvents.RegisterNightEventsCheck("PROC_Camp_PlayCampNight", 0, "after")
     -- CampEvents.RegisterNightEventsCheck("PROC_CampNight_LastDialogPlayed", nil, "after")
     -- CampEvents.RegisterNightEventsCheck("PROC_CampNight_ForceComplete", 1, "after")
-    CampEvents.RegisterNightEventsCheck("PROC_CampNight_ClearCampNight", 1, "after")
+
+    CampEvents.initDone = true
 end
 
 -- _DBG("==== KvCE END Main")

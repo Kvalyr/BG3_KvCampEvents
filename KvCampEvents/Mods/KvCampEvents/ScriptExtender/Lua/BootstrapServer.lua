@@ -2,6 +2,7 @@
 
 -- PersistentVars = {}
 
+
 -- Preconfigure KvShared
 KVS = {}
 KVS.modTableKey = "KvCampEvents"
@@ -38,9 +39,4 @@ local function LevelGameplayStarted()
     kvce_initDone = true
 end
 
--- Ext.Events.SessionLoaded:Subscribe(SessionLoaded, {Priority = 100, Once = true})
-
 Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", LevelGameplayStarted)
--- Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", Mods.KvCampEvents.Misc.DumpPersistentVars) -- DEBUG
-
--- _P("=================== KvCampEvents Server Bootstrap END")

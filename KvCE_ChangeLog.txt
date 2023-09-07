@@ -1,9 +1,12 @@
+v0.4.1 Hotfix
+    * Disabled DB_InCamp mutations due to weird action lag
+
 v0.4
-* Major overhaul of underlying code. Should be more performant and exhibit fewer bugs.
-* Added configuration options
-* Added uninstallation logic and more rigorous self-cleanup before saving
-* Bugfix: Prevent exclamation mark appearing on party members other than the main character (Note: Untested in multiplayer)
-* Russian localization strings by 3asranka and adamaskoff
+    * Major overhaul of underlying code. Should be more performant and exhibit fewer bugs.
+    * Added configuration options
+    * Added uninstallation logic and more rigorous self-cleanup before saving
+    * Bugfix: Prevent exclamation mark appearing on party members other than the main character (Note: Untested in multiplayer)
+    * Russian localization strings by 3asranka and adamaskoff
 
 v0.3.1
     * Added German localization strings by Aurantea
