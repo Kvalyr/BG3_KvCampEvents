@@ -133,56 +133,67 @@ function Reimplementations.PROC_CampNight_DecideCampNight_Recursive( currentCamp
     return true
 end
 
--- -- Reimplmement QRY_CampNight_MeetsRequirements_Approval in Lua without checking DB_InCamp
--- local function KvCE_QRY_CampNight_MeetsRequirements_Approval(newDialogEvent)
---     local reqApprovalTable = Osi.DB_CampNight_Requirement_Approval:Get(newDialogEvent,nil,nil)
---     if #reqApprovalTable < 1 then return end
---     reqApprovalTable = reqApprovalTable[1]
---     local companionUUID = reqApprovalTable[2] -- _Var2
---     local requiredApprovalRating = reqApprovalTable[3] -- _Var3
---     local avatar = Osi.DB_Avatars:Get(nil)[1][1] -- _Var4 -- GetHostCharacter() is probably fine for our purposes
---     local currentApprovalRating = Osi.GetApprovalRating(companionUUID, avatar) -- _Var5
---     return currentApprovalRating >= requiredApprovalRating
+-- Calls to check for subcalls to DB_InCamp():
+--[[
+    QRY_CampNight_HasExclusivityProblem
+        QRY_CampNight_HasEveningDialogs
+            CLEAR
 
---     -- QRY QRY_CampNight_MeetsRequirements_Approval((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
---     --     AND GetApprovalRating(_Var2, _Var4, _Var5, _Var1, _Var1)
---     --     AND _Var5 >= _Var3
---     -- THEN
---     --     DB_NOOP(1);
+    QRY_CampNight_HasEveningReservedSpeakerProblem
+        QRY_CampNight_HasEveningExclusiveDialogs
+            CLEAR
 
---     -- QRY QRY_CampNight_MeetsRequirements_Approval((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
---     --     AND DB_CampNight_Requirement_Approval(_Var1, _Var2, _Var3, _Var1, _Var1)
---     --     AND DB_InCamp(_Var2, _Var1, _Var1, _Var1, _Var1)
---     --     AND NOT DB_Avatars(_Var2, _Var1, _Var1, _Var1, _Var1)
---     --     AND DB_Avatars(_Var4, _Var1, _Var1, _Var1, _Var1)
---     --     AND DB_InCamp(_Var4, _Var1, _Var1, _Var1, _Var1)
---     --     AND NOT QRY_PreventMPDialogue(_Var2, _Var4, _Var1, _Var1, _Var1)
---     --     AND GetApprovalRating(_Var2, _Var4, _Var5, _Var1, _Var1)
---     --     AND _Var5 >= _Var3
---     -- THEN
---     --     DB_NOOP(1);
+    QRY_CampNight_HasSleepReservedSpeakerProblem
+        CLEAR
 
--- end
+    QRY_CampNight_HasMorningReservedSpeakerProblem
+        QRY_CampNight_HasMorningExclusiveDialogs
+            CLEAR
 
--- function Reimplementations.QRY_CampNight_MeetsRequirements_StartDating(newDialogEvent)
---     -- QRY QRY_CampNight_MeetsRequirements_StartDating((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
---     --     AND DB_CampNight_Requirement_CanStartDating(_Var1, _Var2, _Var1, _Var1, _Var1)
---     --     AND NOT DB_ORI_Dating(_, _Var2, _Var1, _Var1, _Var1)
---     --     AND DB_Avatars(_Var4, _Var1, _Var1, _Var1, _Var1)
---     --     AND DB_InCamp(_Var4, _Var1, _Var1, _Var1, _Var1)
---     --     AND NOT DB_Avatars(_Var2, _Var1, _Var1, _Var1, _Var1)
---     --     AND NOT DB_ORI_Partnered(_Var4, _, _Var1, _Var1, _Var1)
---     --     AND GetFlag(ORI_State_DoubleDating_41320aeb-8e1a-433d-a82e-3d78aff578da, _Var4, 0, _Var1, _Var1)
---     --     AND NOT DB_ORI_WasDating(_Var4, _Var2, _Var1, _Var1, _Var1)
---     --     AND NOT QRY_PreventMPDialogue(_Var2, _Var4, _Var1, _Var1, _Var1)
---     -- THEN
---     --     DB_NOOP(1);
+    QRY_CampNight_MeetsRequirements
+        QRY_CampNight_MeetsRequirements_IsInFallback
+            CLEAR
 
---     -- QRY QRY_CampNight_MeetsRequirements_StartDating((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
---     --     AND NOT DB_CampNight_Requirement_CanStartDating(_Var1, _, _Var1, _Var1, _Var1)
---     -- THEN
---     --     DB_NOOP(1);
--- end
+        QRY_CampNight_MeetsRequirements_Flags
+            CLEAR
+
+        QRY_CampNight_MeetsRequirements_Approval
+            HAS DB_InCamp
+
+        QRY_CampNight_MeetsRequirements_Partner
+            HAS DB_InCamp
+
+        QRY_CampNight_MeetsRequirements_Dating
+            HAS DB_InCamp
+
+        QRY_CampNight_MeetsRequirements_StartDating
+            HAS DB_InCamp
+
+        QRY_CampNight_MeetsRequirements_SameUser
+            CLEAR
+
+        QRY_FallbackCamp_CampNightMeetsRequirements
+            CLEAR
+
+
+
+
+    QRY_CampNight_AllSpeakersMissing
+        QRY_CampNight_AtLeastOneCompanionAvailableForCRD
+            HAS DB_InCamp
+            QRY_SpeakerIsAvailable
+                QRY_SpeakerIsInDialogRange
+                    CLEAR
+                QRY_SpeakerIsInCurrentLevel
+                    CLEAR
+
+        QRY_CampNight_AtLeastOneAvatarAvailableForSoloDream
+            HAS DB_InCamp
+        QRY_CampNight_AtLeastOneCompanionAvailableForRomanceMoment
+            HAS DB_InCamp
+
+--]]--
+
 
 -- function Reimplementations.QRY_CampNight_MeetsRequirements(newDialogEvent)
 --     -- QRY QRY_CampNight_MeetsRequirements((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
@@ -221,5 +232,89 @@ end
 --     end
 --     return true
 -- end
+
+
+-- TODO: Reimplementations without DB_InCamp()
+-- QRY_CampNight_MeetsRequirements_Approval
+-- QRY_CampNight_MeetsRequirements_Partner
+-- QRY_CampNight_MeetsRequirements_Dating
+-- QRY_CampNight_MeetsRequirements_StartDating
+-- QRY_CampNight_AtLeastOneCompanionAvailableForCRD
+-- QRY_CampNight_AtLeastOneAvatarAvailableForSoloDream
+-- QRY_CampNight_AtLeastOneCompanionAvailableForRomanceMoment
+
+
+-- TODO: Reimplementations for multi-event
+-- PROC_CampNight_StartSelected
+-- PROC_CampNight_StartSelected_CRDs
+
+
+
+-- QRY QRY_CampNight_MeetsRequirements_Partner((FLAG)_Var1, (FLAG)_Var1, (FLAG)_Var1, (FLAG)_Var1, (FLAG)_Var1)
+--     AND DB_CampNight_Requirement_Partner(_Var1, _Var2, _Var1, _Var1, _Var1)
+--     AND DB_ORI_Partnered(_Var3, _Var2, _Var1, _Var1, _Var1)
+--     AND DB_InCamp(_Var3, _Var1, _Var1, _Var1, _Var1)
+--     AND NOT QRY_PreventMPDialogue(_Var2, _Var3, _Var1, _Var1, _Var1)
+-- THEN
+--     DB_NOOP(1);
+
+
+-- Reimplmement QRY_CampNight_MeetsRequirements_Approval in Lua without checking DB_InCamp
+function Reimplementations.QRY_CampNight_MeetsRequirements_Approval(newDialogEvent)
+    local reqApprovalTable = Osi.DB_CampNight_Requirement_Approval:Get(newDialogEvent,nil,nil)
+    if #reqApprovalTable < 1 then return end
+    reqApprovalTable = reqApprovalTable[1]
+    local companionUUID = reqApprovalTable[2] -- _Var2
+    local requiredApprovalRating = reqApprovalTable[3] -- _Var3
+    local avatar = Osi.DB_Avatars:Get(nil)[1][1] -- _Var4 -- Utils.GetPlayer() is probably fine for our purposes
+
+    -- if not DB.Bool("DB_InCamp", companionUUID) then return end -- Skip this check, as we want results regardless of player being in camp or not
+    -- if not DB.Bool("DB_InCamp", avatar) then return end -- Skip this check, as we want results regardless of player being in camp or not
+
+    if Osi.QRY_PreventMPDialogue(companionUUID, avatar) then return end
+
+    local currentApprovalRating = Osi.GetApprovalRating(companionUUID, avatar) -- _Var5
+    return currentApprovalRating >= requiredApprovalRating
+
+    -- QRY QRY_CampNight_MeetsRequirements_Approval((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+    --     AND GetApprovalRating(_Var2, _Var4, _Var5, _Var1, _Var1)
+    --     AND _Var5 >= _Var3
+    -- THEN
+    --     DB_NOOP(1);
+
+    -- QRY QRY_CampNight_MeetsRequirements_Approval((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+    --     AND DB_CampNight_Requirement_Approval(_Var1, _Var2, _Var3, _Var1, _Var1)
+    --     AND DB_InCamp(_Var2, _Var1, _Var1, _Var1, _Var1)
+    --     AND NOT DB_Avatars(_Var2, _Var1, _Var1, _Var1, _Var1)
+    --     AND DB_Avatars(_Var4, _Var1, _Var1, _Var1, _Var1)
+    --     AND DB_InCamp(_Var4, _Var1, _Var1, _Var1, _Var1)
+    --     AND NOT QRY_PreventMPDialogue(_Var2, _Var4, _Var1, _Var1, _Var1)
+    --     AND GetApprovalRating(_Var2, _Var4, _Var5, _Var1, _Var1)
+    --     AND _Var5 >= _Var3
+    -- THEN
+    --     DB_NOOP(1);
+
+end
+
+-- function Reimplementations.QRY_CampNight_MeetsRequirements_StartDating(newDialogEvent)
+--     -- QRY QRY_CampNight_MeetsRequirements_StartDating((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+--     --     AND DB_CampNight_Requirement_CanStartDating(_Var1, _Var2, _Var1, _Var1, _Var1)
+--     --     AND NOT DB_ORI_Dating(_, _Var2, _Var1, _Var1, _Var1)
+--     --     AND DB_Avatars(_Var4, _Var1, _Var1, _Var1, _Var1)
+--     --     AND DB_InCamp(_Var4, _Var1, _Var1, _Var1, _Var1)
+--     --     AND NOT DB_Avatars(_Var2, _Var1, _Var1, _Var1, _Var1)
+--     --     AND NOT DB_ORI_Partnered(_Var4, _, _Var1, _Var1, _Var1)
+--     --     AND GetFlag(ORI_State_DoubleDating_41320aeb-8e1a-433d-a82e-3d78aff578da, _Var4, 0, _Var1, _Var1)
+--     --     AND NOT DB_ORI_WasDating(_Var4, _Var2, _Var1, _Var1, _Var1)
+--     --     AND NOT QRY_PreventMPDialogue(_Var2, _Var4, _Var1, _Var1, _Var1)
+--     -- THEN
+--     --     DB_NOOP(1);
+
+--     -- QRY QRY_CampNight_MeetsRequirements_StartDating((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+--     --     AND NOT DB_CampNight_Requirement_CanStartDating(_Var1, _, _Var1, _Var1, _Var1)
+--     -- THEN
+--     --     DB_NOOP(1);
+-- end
+
 
 -- _DBG("==== KvCE END Reimplementations")

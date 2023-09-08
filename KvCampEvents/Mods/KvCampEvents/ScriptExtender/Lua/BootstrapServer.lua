@@ -20,6 +20,7 @@ Notifications = {}
 
 Ext.Require("KvCE_Misc.lua")
 Ext.Require("KvCE_Config.lua")
+Ext.Require("KvCE_OverheadMarkers.lua")
 Ext.Require("KvCE_Notifications.lua")
 Ext.Require("KvCE_Reimplementations.lua")
 Ext.Require("KvCE_State.lua")

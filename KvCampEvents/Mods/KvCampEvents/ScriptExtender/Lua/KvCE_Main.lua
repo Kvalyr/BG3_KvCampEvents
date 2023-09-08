@@ -101,7 +101,8 @@ function CampEvents.NotifyPlayer()
 
     Notifications.AddStatusEffect_CampNightEvents(character_uuid)
     -- Notifications.AddStatusEffect_RelationshipDialogues(character_uuid)
-    Notifications.AddExclamationOverCharacter(character_uuid)
+    Notifications.ExclamationOverCharacter_Add_CNE(character_uuid)
+    -- Notifications.AddExclamationOverCharacter_RelationshipDialogues(character_uuid)
 end
 
 -- ================
@@ -113,7 +114,7 @@ function CampEvents.Cleanup()
     -- TODO: Differentiate between Camp Events and Relationship Dialogs
     Notifications.RemoveStatusEffect_CampNightEvents(character_uuid)
     Notifications.RemoveStatusEffect_RelationshipDialogues(character_uuid)
-    Notifications.RemoveExclamationOverCharacter(character_uuid)
+    Notifications.CharacterOverheadMarker_Remove(character_uuid)
 end
 
 -- Mods.KvCampEvents.CampEvents.FindValidNightEvents()
@@ -141,6 +142,7 @@ function CampEvents.FindValidNightEvents()
         return validEvents
     end
 
+    -- DB_InCamp mutations disabled due to action/UI lag in v0.4
     -- TemporarilyAddToDBInCamp()
     for idx, subTable in pairs(eventsInDB) do
         local eventUUID = subTable[1]
@@ -155,7 +157,11 @@ function CampEvents.FindValidNightEvents()
 
     if KVS.Output.GetLogLevel() >= 3 then
         _DBG("FindValidNightEvents() - Events:")
-        _D(validEvents)
+
+        for k,v in pairs(validEvents) do
+            _DBG("    ", k, ":", v)
+        end
+        -- _D(validEvents)
     end
     return validEvents
 end
@@ -193,17 +199,20 @@ function CampEvents.CheckNotifyNightEvents()
     end
 end
 
-local function NightEventsCallback( who, ... )
+
+local function NightEventsCallback( who )
+    _P("=========================================================== NightEventsCallback()")
     if proc_event == "PROC_Subregion_Entered" and not Utils.IsUUIDPlayer(who) then
         return
     end
 
-    _DBG(proc_event, who, ..., " CampEvents.CheckNotifyNightEvents")
+    _DBG(proc_event, who, " CampEvents.CheckNotifyNightEvents")
     CampEvents.CheckNotifyNightEvents()
 end
 
 function CampEvents.RegisterNightEventsCheck( proc_event, num_params, before_or_after )
     Ext.Osiris.RegisterListener(proc_event, num_params or 0, before_or_after or "after", NightEventsCallback)
+    -- Ext.Osiris.RegisterListener(proc_event, num_params or 0, before_or_after or "after", CampEvents.CheckNotifyNightEvents)
 end
 
 function CampEvents.CheckUninstalled( caller )
@@ -231,6 +240,9 @@ function CampEvents.Init()
     if CampEvents.initDone or CampEvents.CheckUninstalled("CampEvents.Init()") then
         return
     end
+
+    Notifications.CleanupOldVersion()
+
 
     Events.RegisterGameStateChanged("Running", "Save", PreSave_Cleanup)
     Events.RegisterGameStateChanged("Save", "Running", PostSave_CheckNotify)
