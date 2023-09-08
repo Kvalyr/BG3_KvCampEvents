@@ -18,7 +18,8 @@ A future version of this mod will adjust the game logic to allow multiple events
 Installation:
 * Install BG3 Mod Manager (Vortex might work, but I don't use it and have no interest in troubleshooting it. If you use it, you're on your own.)
 * Install BG3 Script Extender (You can install this easily using BG3 Mod Manager)
-
+* Optional: Create an empty folder called 'Osiris Data' if it doesn't already exist at this location:
+C:\Users/[USERNAME]\AppData\Local\Larian Studios\Baldur's Gate 3\Osiris Data\
 
 Uninstallation:
 * See this article: https://www.nexusmods.com/baldursgate3/articles/168

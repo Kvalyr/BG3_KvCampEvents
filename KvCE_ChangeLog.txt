@@ -1,3 +1,6 @@
+v0.4.2
+    * Re-enabled on-save cleanup logic that was disabled during v0.4.1
+
 v0.4.1 Hotfix
     * Disabled DB_InCamp mutations due to weird action lag
 
@@ -28,8 +31,3 @@ v0.2
 
 v0.1
     * Initial release
-
-
-
-* Reduced console spam
-* Localization strings by d3Xmachina, Rekcheli, LelouchLan, AxellSlade, pinkrabbid, hawk333
