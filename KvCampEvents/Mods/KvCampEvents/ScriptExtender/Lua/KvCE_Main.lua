@@ -6,6 +6,7 @@ local DB = KVS.DB
 local Events = KVS.Events
 local Utils = KVS.Utils
 local Table = KVS.Table
+local Functions = KVS.Functions
 
 -- _DBG("======== KvCE START Main")
 
@@ -79,8 +80,8 @@ end
 local function RestoreDBInCamp()
     -- Delete our temporary additions from DB_InCamp
     for k, v in pairs(DB_InCamp_TemporaryAdded) do
-        -- _DBG("Would delete from DB_InCamp:", v)
-        Osi.DB_InCamp:Delete(v)
+        _DBG("Would delete from DB_InCamp:", v)
+        -- Osi.DB_InCamp:Delete(v)
     end
     ResetDBInCampTemporary()
 end
@@ -142,8 +143,7 @@ function CampEvents.FindValidNightEvents()
         return validEvents
     end
 
-    -- DB_InCamp mutations disabled due to action/UI lag in v0.4
-    -- TemporarilyAddToDBInCamp()
+    -- TemporarilyAddToDBInCamp() -- DB_InCamp mutations disabled due to action/UI lag in v0.4
     for idx, subTable in pairs(eventsInDB) do
         local eventUUID = subTable[1]
         local eventPriority = subTable[2]
@@ -153,12 +153,12 @@ function CampEvents.FindValidNightEvents()
             table.insert(validEvents, eventUUID)
         end
     end
-    -- RestoreDBInCamp()
+    -- RestoreDBInCamp() -- DB_InCamp mutations disabled due to action/UI lag in v0.4
 
     if KVS.Output.GetLogLevel() >= 3 then
         _DBG("FindValidNightEvents() - Events:")
 
-        for k,v in pairs(validEvents) do
+        for k, v in pairs(validEvents) do
             _DBG("    ", k, ":", v)
         end
         -- _D(validEvents)
@@ -175,9 +175,14 @@ end
 
 -- ================
 -- Main callback triggered by game events to check for pending night events, and notify player if necessary
+-- Mods.KvCampEvents.CampEvents.CheckNotifyNightEvents()
 function CampEvents.CheckNotifyNightEvents()
 
     if CampEvents.CheckUninstalled("CampEvents.CheckNotifyNightEvents()") then
+        return
+    end
+
+    if not Functions.Throttled_IsReadyOrRecord("CampEvents.CheckNotifyNightEvents", 3000) then
         return
     end
 
@@ -199,22 +204,12 @@ function CampEvents.CheckNotifyNightEvents()
     end
 end
 
-
-local function NightEventsCallback( who )
-    _P("=========================================================== NightEventsCallback()")
-    if proc_event == "PROC_Subregion_Entered" and not Utils.IsUUIDPlayer(who) then
-        return
-    end
-
-    _DBG(proc_event, who, " CampEvents.CheckNotifyNightEvents")
-    CampEvents.CheckNotifyNightEvents()
-end
-
+-- ================
 function CampEvents.RegisterNightEventsCheck( proc_event, num_params, before_or_after )
-    Ext.Osiris.RegisterListener(proc_event, num_params or 0, before_or_after or "after", NightEventsCallback)
-    -- Ext.Osiris.RegisterListener(proc_event, num_params or 0, before_or_after or "after", CampEvents.CheckNotifyNightEvents)
+    Ext.Osiris.RegisterListener(proc_event, num_params or 0, before_or_after or "after", CampEvents.CheckNotifyNightEvents)
 end
 
+-- ================
 function CampEvents.CheckUninstalled( caller )
     if State.IsUninstalled() then
         _DBG((caller or "[Unknown]") .. " - CampEvents.CheckUninstalled() - KvCE in UNINSTALLED state - Skipping to cleanup")
@@ -234,15 +229,15 @@ local function PostSave_CheckNotify()
     CampEvents.CheckNotifyNightEvents()
 end
 
-CampEvents.initDone = false
 
+-- ================
+CampEvents.initDone = false
 function CampEvents.Init()
     if CampEvents.initDone or CampEvents.CheckUninstalled("CampEvents.Init()") then
         return
     end
 
     Notifications.CleanupOldVersion()
-
 
     Events.RegisterGameStateChanged("Running", "Save", PreSave_Cleanup)
     Events.RegisterGameStateChanged("Save", "Running", PostSave_CheckNotify)

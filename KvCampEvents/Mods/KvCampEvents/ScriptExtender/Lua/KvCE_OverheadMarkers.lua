@@ -98,6 +98,7 @@ function DB_LoopEffect.CleanupDuplicates( character_uuid, effectTag, effectResou
         for k, row in pairs(rows) do
             if includingFirst or k ~= 1 then
                 local loop_effect_handle = row[2]
+                _DBG("DB_LoopEffect.CleanupDuplicates() - Cleaning up duplicate:", character_uuid, loop_effect_handle, effectTag, effectResource)
                 StopLoopEffect(loop_effect_handle)
                 DB_LoopEffect.DeleteRow(character_uuid, loop_effect_handle, effectTag, effectResource)
             end

@@ -150,7 +150,13 @@ end
 
 function Notifications.CleanupOldVersion()
     Notifications.CleanupNonPlayer()
-    Notifications.DB_LoopEffect.CleanupDuplicates()
+
+    local player = Utils.GetPlayer()
+    local effectResource = nil -- Any
+    for key, effectTag in pairs(EFFECT_TAGS) do
+        Notifications.DB_LoopEffect.CleanupDuplicates(player, effectTag, effectResource)
+    end
+
 end
 
 
