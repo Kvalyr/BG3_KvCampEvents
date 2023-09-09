@@ -10,8 +10,8 @@ Config.AddDefaultValue("Notifications.CNE_UseStatus", true)
 Config.AddDefaultValue("Notifications.RD_UseExclamation", true)
 Config.AddDefaultValue("Notifications.RD_UseStatus", true)
 
-Config.AddDefaultValue("DBs.AllowMutate", true)
-Config.AddDefaultValue("DBs.Mutate_DB_InCamp", true)
+Config.AddDefaultValue("DBs.AllowMutate", false)
+Config.AddDefaultValue("DBs.Mutate_DB_InCamp", false)
 
 Config.AddDefaultValue("Workarounds.MintharaAtMoonrise", false)
 

@@ -40,6 +40,7 @@ local function LevelGameplayStarted()
     CampEvents.Init()
 
     kvce_initDone = true
+    KVS.Output.Info("Log Level at:", KVS.Output.GetLogLevel(), "("..KVS.Output.GetLogLevelAsStr()..")")
 end
 
 Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", LevelGameplayStarted)
