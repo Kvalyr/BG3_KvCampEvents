@@ -12,4 +12,7 @@ Config.AddDefaultValue("Notifications.RD_UseStatus", true)
 
 Config.AddDefaultValue("DBs.AllowMutate", true)
 Config.AddDefaultValue("DBs.Mutate_DB_InCamp", true)
+
+Config.AddDefaultValue("Workarounds.MintharaAtMoonrise", false)
+
 -- ==================================================

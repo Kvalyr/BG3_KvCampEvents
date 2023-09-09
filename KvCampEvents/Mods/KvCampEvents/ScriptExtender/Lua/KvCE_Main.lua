@@ -173,14 +173,33 @@ local function IsNightMode()
     return DB.Bool("DB_Camp_NightMode", 1)
 end
 
+local proceedChecks = {}
+
+function CampEvents.AddProceedCheck( key, func )
+    proceedChecks[key] = func
+end
+
+function CampEvents.TestProceedChecks()
+    for key, func in pairs(proceedChecks) do
+        if not func() then
+            _DBG("CampEvents.TestProceedChecks() - Check failed:", key)
+            return false
+        end
+    end
+    return true
+end
+
+CampEvents.AddProceedCheck(
+    "CheckUninstalled", function()
+        return not CampEvents.CheckUninstalled("CampEvents.CheckNotifyNightEvents()")
+    end
+)
+
 -- ================
 -- Main callback triggered by game events to check for pending night events, and notify player if necessary
 -- Mods.KvCampEvents.CampEvents.CheckNotifyNightEvents()
 function CampEvents.CheckNotifyNightEvents()
-
-    if CampEvents.CheckUninstalled("CampEvents.CheckNotifyNightEvents()") then
-        return
-    end
+    if not CampEvents.TestProceedChecks() then return end
 
     if not Functions.Throttled_IsReadyOrRecord("CampEvents.CheckNotifyNightEvents", 3000) then
         return
@@ -228,7 +247,6 @@ local function PostSave_CheckNotify()
     _I("Checking for events after save.")
     CampEvents.CheckNotifyNightEvents()
 end
-
 
 -- ================
 CampEvents.initDone = false
