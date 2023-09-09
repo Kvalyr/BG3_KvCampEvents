@@ -4,9 +4,9 @@ local _I = KVS.Output.Info
 local _DBG = KVS.Output.Debug
 local DB = KVS.DB
 local utils = KVS.Utils
--- _DBG("======== KvCE START Reimplementations")
 
 -- Osiris Procs and Queries reimplemented as Lua functions with modifications for our needs
+-- Very WIP
 
 -- ==================================================
 Reimplementations = {}
@@ -110,7 +110,9 @@ function Reimplementations.PROC_CampNight_DecideCampNight_Recursive( currentCamp
     end
 
     -- AND QRY_CampNight_MeetsRequirements(_Var3, _, _, _, _)
-    if not Osi.QRY_CampNight_MeetsRequirements(newDialogEvent) then
+    -- if not Osi.QRY_CampNight_MeetsRequirements(newDialogEvent) then
+    -- Use Lua reimp
+    if not Reimplementations.QRY_CampNight_MeetsRequirements(newDialogEvent) then
         -- _DBG("IVCNE - Skipping due to 'QRY_CampNight_MeetsRequirements'", newDialogEvent)
         return
     end
@@ -195,50 +197,69 @@ end
 --]]--
 
 
--- function Reimplementations.QRY_CampNight_MeetsRequirements(newDialogEvent)
---     -- QRY QRY_CampNight_MeetsRequirements((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
---     --     AND NOT QRY_CampNight_MeetsRequirements_IsInFallback(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_CampNight_MeetsRequirements_Flags(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_CampNight_MeetsRequirements_Approval(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_CampNight_MeetsRequirements_Partner(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_CampNight_MeetsRequirements_Dating(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_CampNight_MeetsRequirements_StartDating(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_CampNight_MeetsRequirements_SameUser(_Var1, _Var1, _Var1, _Var1, _Var1)
+function Reimplementations.QRY_CampNight_MeetsRequirements(newDialogEvent)
+    -- QRY QRY_CampNight_MeetsRequirements((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+    --     AND NOT QRY_CampNight_MeetsRequirements_IsInFallback(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_CampNight_MeetsRequirements_Flags(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_CampNight_MeetsRequirements_Approval(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_CampNight_MeetsRequirements_Partner(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_CampNight_MeetsRequirements_Dating(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_CampNight_MeetsRequirements_StartDating(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_CampNight_MeetsRequirements_SameUser(_Var1, _Var1, _Var1, _Var1, _Var1)
+    -- THEN
+    --     DB_NOOP(1);
+
+    -- QRY QRY_CampNight_MeetsRequirements((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+    --     AND QRY_CampNight_MeetsRequirements_IsInFallback(_Var1, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_FallbackCamp_CampNightMeetsRequirements(_Var1, _Var1, _Var1, _Var1, _Var1)
+    -- THEN
+    --     DB_NOOP(1);
+
+    -- Alternate_QRY_CampNight_MeetsRequirements(newDialogEvent) -- debug
+
+    if not Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent) then
+        -- _DBG("QRY_CampNight_MeetsRequirements() - NOT in fallback")
+        if not Osi.QRY_CampNight_MeetsRequirements_Flags(newDialogEvent) then return false end
+
+        -- Use lua reimplementation that skips DB_InCamp checks
+        if not Osi.QRY_CampNight_MeetsRequirements_Approval(newDialogEvent) then return false end
+        -- if not Reimplementations.QRY_CampNight_MeetsRequirements_Approval(newDialogEvent) then return false end
+
+        if not Osi.QRY_CampNight_MeetsRequirements_Partner(newDialogEvent) then return false end
+        if not Osi.QRY_CampNight_MeetsRequirements_Dating(newDialogEvent) then return false end
+        if not Osi.QRY_CampNight_MeetsRequirements_StartDating(newDialogEvent) then return false end
+        if not Osi.QRY_CampNight_MeetsRequirements_SameUser(newDialogEvent) then return false end
+    else
+        -- _DBG("QRY_CampNight_MeetsRequirements() - in fallback")
+        if not Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent) then return false end
+        if not Osi.QRY_FallbackCamp_CampNightMeetsRequirements(newDialogEvent) then return false end
+    end
+    return true
+end
+
+-- function Reimplementations.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent)
+
+--     -- FLAG, string, int, int
+--     -- local row_DB_CampNight_ForceOnLevelSwap = Osi.DB_CampNight_ForceOnLevelSwap(newDialogEvent, _Var2, _, 1, _Var1) -- _Var2
+--     -- local var2 = row_DB_CampNight_ForceOnLevelSwap[2]
+
+--     -- Osi.DB_FallbackCamp_InCamp(var2)
+
+--     -- QRY QRY_CampNight_MeetsRequirements_IsInFallback((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+--     --     AND DB_CampNight_ForceOnLevelSwap(_Var1, _Var2, _, 1, _Var1)
+--     --     AND DB_FallbackCamp_InCamp(_Var2, _Var1, _Var1, _Var1, _Var1)
 --     -- THEN
 --     --     DB_NOOP(1);
-
---     -- QRY QRY_CampNight_MeetsRequirements((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
---     --     AND QRY_CampNight_MeetsRequirements_IsInFallback(_Var1, _Var1, _Var1, _Var1, _Var1)
---     --     AND QRY_FallbackCamp_CampNightMeetsRequirements(_Var1, _Var1, _Var1, _Var1, _Var1)
---     -- THEN
---     --     DB_NOOP(1);
-
---     -- Alternate_QRY_CampNight_MeetsRequirements(newDialogEvent) -- debug
-
---     if not Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent) then
---         _DBG("KvCE_QRY_CampNight_MeetsRequirements() - NOT in fallback")
---         if not Osi.QRY_CampNight_MeetsRequirements_Flags(newDialogEvent) then return false end
---         -- Use lua reimplementation that skips DB_InCamp checks
---         -- if not Osi.QRY_CampNight_MeetsRequirements_Approval(newDialogEvent) then return false end
---         if not KvCE_QRY_CampNight_MeetsRequirements_Approval(newDialogEvent) then return false end
---         if not Osi.QRY_CampNight_MeetsRequirements_Partner(newDialogEvent) then return false end
---         if not Osi.QRY_CampNight_MeetsRequirements_Dating(newDialogEvent) then return false end
---         if not Osi.QRY_CampNight_MeetsRequirements_StartDating(newDialogEvent) then return false end
---         if not Osi.QRY_CampNight_MeetsRequirements_SameUser(newDialogEvent) then return false end
---     else
---         _DBG("KvCE_QRY_CampNight_MeetsRequirements() - in fallback")
---         if not Osi.QRY_CampNight_MeetsRequirements_IsInFallback(newDialogEvent) then return false end
---         if not Osi.QRY_FallbackCamp_CampNightMeetsRequirements(newDialogEvent) then return false end
---     end
---     return true
 -- end
 
-
--- TODO: Reimplementations without DB_InCamp()
--- QRY_CampNight_MeetsRequirements_Approval
+-- TODO: Reimplementations without DB_InCamp() by priority
+-- QRY_CampNight_MeetsRequirements      DONE
+-- QRY_CampNight_MeetsRequirements_IsInFallback
+-- QRY_CampNight_MeetsRequirements_Approval     DONE
 -- QRY_CampNight_MeetsRequirements_Partner
 -- QRY_CampNight_MeetsRequirements_Dating
 -- QRY_CampNight_MeetsRequirements_StartDating
+-- QRY_CampNight_AllSpeakersMissing
 -- QRY_CampNight_AtLeastOneCompanionAvailableForCRD
 -- QRY_CampNight_AtLeastOneAvatarAvailableForSoloDream
 -- QRY_CampNight_AtLeastOneCompanionAvailableForRomanceMoment
@@ -259,7 +280,7 @@ end
 --     DB_NOOP(1);
 
 
--- Reimplmement QRY_CampNight_MeetsRequirements_Approval in Lua without checking DB_InCamp
+-- Reimplmements QRY_CampNight_MeetsRequirements_Approval in Lua without checking DB_InCamp
 function Reimplementations.QRY_CampNight_MeetsRequirements_Approval(newDialogEvent)
     local reqApprovalTable = Osi.DB_CampNight_Requirement_Approval:Get(newDialogEvent,nil,nil)
     if #reqApprovalTable < 1 then return end
@@ -293,8 +314,77 @@ function Reimplementations.QRY_CampNight_MeetsRequirements_Approval(newDialogEve
     --     AND _Var5 >= _Var3
     -- THEN
     --     DB_NOOP(1);
-
 end
+
+
+-- function Reimplementations.QRY_CampNight_AllSpeakersMissing(dialogEvent)
+
+--     -- Flag, DialogResource
+--     -- AND NOT DB_CampNight_CFM(_Var1, _, _Var1, _Var1, _Var1)
+--     if DB.Bool("DB_CampNight_CFM", dialogEvent, nil) then return end
+
+--     -- AND NOT DB_CampNight_IVB(_Var1, _, _, _Var1, _Var1)
+--     -- AND NOT DB_CampNight_SCO(_Var1, _, _Var1, _Var1, _Var1)
+--     -- AND NOT DB_CampNight_AvatarDream(_Var1, _, _Var1, _Var1, _Var1)
+--     -- AND NOT DB_CampNight_MorningIVB(_Var1, _, _, _Var1, _Var1)
+--     -- AND NOT DB_CampNight_MorningCFM(_Var1, _, _Var1, _Var1, _Var1)
+--     -- AND NOT QRY_CampNight_AtLeastOneCompanionAvailableForCRD(_Var1, _Var1, _Var1, _Var1, _Var1)
+--     if Reimplementations.QRY_CampNight_AtLeastOneCompanionAvailableForCRD(dialogEvent) then return end
+
+--     -- AND NOT QRY_CampNight_AtLeastOneAvatarAvailableForSoloDream(_Var1, _Var1, _Var1, _Var1, _Var1)
+--     -- AND NOT QRY_CampNight_AtLeastOneCompanionAvailableForRo
+
+
+-- -- QRY QRY_CampNight_AllSpeakersMissing((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+-- --     AND NOT DB_CampNight_CFM(_Var1, _, _Var1, _Var1, _Var1)
+-- --     AND NOT DB_CampNight_IVB(_Var1, _, _, _Var1, _Var1)
+-- --     AND NOT DB_CampNight_SCO(_Var1, _, _Var1, _Var1, _Var1)
+-- --     AND NOT DB_CampNight_AvatarDream(_Var1, _, _Var1, _Var1, _Var1)
+-- --     AND NOT DB_CampNight_MorningIVB(_Var1, _, _, _Var1, _Var1)
+-- --     AND NOT DB_CampNight_MorningCFM(_Var1, _, _Var1, _Var1, _Var1)
+-- --     AND NOT QRY_CampNight_AtLeastOneCompanionAvailableForCRD(_Var1, _Var1, _Var1, _Var1, _Var1)
+
+-- --     AND NOT QRY_CampNight_AtLeastOneAvatarAvailableForSoloDream(_Var1, _Var1, _Var1, _Var1, _Var1)
+-- --     AND NOT QRY_CampNight_AtLeastOneCompanionAvailableForRomanceMoment(_Var1, _Var1, _Var1, _Var1, _Var1)
+-- -- THEN
+-- --     DB_NOOP(1);
+-- end
+
+
+function Reimplementations.QRY_CampNight_AtLeastOneCompanionAvailableForCRD(dialogEvent)
+
+    -- _Var1 : dialogEvent
+    -- _Var2 : Character
+
+    --     AND DB_CampNight_CRD(_Var1, _Var2, _, _, _Var1)
+    local row_DB_CampNight_CRD = Osi.DB_CampNight_CRD:Get(dialogEvent)
+    local character = row_DB_CampNight_CRD[1] and row_DB_CampNight_CRD[1][2]
+
+    -- AND NOT DB_Avatars(_Var2, _Var1, _Var1, _Var1, _Var1)
+    if DB.Bool("DB_Avatars", character) then return end
+
+    -- AND DB_InCamp(_Var2, _Var1, _Var1, _Var1, _Var1)
+    -- Skip
+
+    -- AND NOT DB_CantTalk(_Var2, _Var1, _Var1, _Var1, _Var1)
+    if DB.Bool("DB_CantTalk", character) then return end
+
+
+    -- AND QRY_SpeakerIsAvailable(_Var2, _Var1, _Var1, _Var1, _Var1)
+    if not Osi.QRY_SpeakerIsAvailable(character) then return end
+
+    return true
+
+    -- QRY QRY_CampNight_AtLeastOneCompanionAvailableForCRD((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
+    --     AND DB_CampNight_CRD(_Var1, _Var2, _, _, _Var1)
+    --     AND NOT DB_Avatars(_Var2, _Var1, _Var1, _Var1, _Var1)
+    --     AND DB_InCamp(_Var2, _Var1, _Var1, _Var1, _Var1)
+    --     AND NOT DB_CantTalk(_Var2, _Var1, _Var1, _Var1, _Var1)
+    --     AND QRY_SpeakerIsAvailable(_Var2, _Var1, _Var1, _Var1, _Var1)
+    -- THEN
+    --     DB_NOOP(1);
+end
+
 
 -- function Reimplementations.QRY_CampNight_MeetsRequirements_StartDating(newDialogEvent)
 --     -- QRY QRY_CampNight_MeetsRequirements_StartDating((GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1, (GUIDSTRING)_Var1)
