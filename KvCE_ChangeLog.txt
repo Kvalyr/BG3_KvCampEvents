@@ -1,3 +1,11 @@
+v0.4.4
+    * Softened "Failed to retrieve any player-controlled character" from an error to a warning
+
+v0.4.3
+    * Optimizations, particularly to overhead-exclamation logic
+    * Additional cleanup functions to remove lingering markers from older versions
+    * Optional workaround (See FAQ) for Minthara looping (Disabled by default, may not be necessary at all)
+
 v0.4.2
     * Re-enabled on-save cleanup logic that was disabled during v0.4.1
 

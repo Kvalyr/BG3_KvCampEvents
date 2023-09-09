@@ -21,6 +21,7 @@ Installation:
 * Optional: Create an empty folder called 'Osiris Data' if it doesn't already exist at this location:
 C:\Users/[USERNAME]\AppData\Local\Larian Studios\Baldur's Gate 3\Osiris Data\
 
+
 Uninstallation:
 * See this article: https://www.nexusmods.com/baldursgate3/articles/168
 * It's almost never a good idea to remove mods from an ongoing playthrough.
@@ -28,6 +29,7 @@ Uninstallation:
 
 
 Configuration:
+* Configuration is optional - Most players can just install and play
 * See this article for instructions on configuring the mod: https://www.nexusmods.com/baldursgate3/articles/170
 * i.e.; Enabling/Disabling the exclamation mark, statuses, etc.
 

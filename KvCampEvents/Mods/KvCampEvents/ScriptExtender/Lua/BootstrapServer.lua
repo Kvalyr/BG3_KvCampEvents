@@ -7,7 +7,7 @@
 KVS = {}
 KVS.modTableKey = "KvCampEvents"
 KVS.modPrefix = "KvCE"
-KVS.modVersion = {major="0.4", minor="3"}
+KVS.modVersion = {major="0.4", minor="4"}
 
 -- KvShared
 Ext.Require("KvShared/_Main.lua")
