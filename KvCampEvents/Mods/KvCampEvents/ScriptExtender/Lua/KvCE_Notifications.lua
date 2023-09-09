@@ -65,12 +65,14 @@ function Notifications.CharacterOverheadMarker_Add( character_uuid, effectResour
     -- _DBG("Notifications.CharacterOverheadMarker_Add()\n", character_uuid, effectResource, effectTag)
 
     if not Utils.IsUUIDPlayer(character_uuid) then
-        Utils.assertNotNil(allowNonPlayer, "N.CharacterOverheadMarker_Add() - Call attempted on non-player UUID with nil allowNonPlayer: " .. character_uuid)
+        Utils.assertNotNil(
+            allowNonPlayer, "N.CharacterOverheadMarker_Add() - Call attempted on non-player UUID with nil allowNonPlayer: " .. character_uuid
+        )
 
         _W("N.CharacterOverheadMarker_Add() - Call on non-player UUID:", character_uuid)
     end
 
-    local existingLoopEffectHandler = DB_LoopEffect.GetOverheadMarkerHandle( character_uuid, effectTag, effectResource )
+    local existingLoopEffectHandler = DB_LoopEffect.GetOverheadMarkerHandle(character_uuid, effectTag, effectResource)
     if not existingLoopEffectHandler then
         Osi.PROC_LoopEffect(effectResource, character_uuid, effectTag, "__ANY__", "Dummy_OverheadFX");
     end
@@ -86,15 +88,15 @@ function Notifications.CharacterOverheadMarker_Remove( character_uuid, effectTag
     Utils.assertIsStr(character_uuid, "Notifications.CharacterOverheadMarker_Remove() called with invalid character_uuid")
 
     -- Need to get all rows and call StopLoopEffect on each; can't just delete all matching in the DB
-    local rows = DB_LoopEffect.GetRows( character_uuid, loop_effect_handle, effectTag, effectResource )
-    for k,v in pairs(rows) do
+    local rows = DB_LoopEffect.GetRows(character_uuid, loop_effect_handle, effectTag, effectResource)
+    for k, v in pairs(rows) do
         local loop_effect_handle = v[2]
         StopLoopEffect(loop_effect_handle)
         -- DB_LoopEffect.DeleteRow( character_uuid, handle, effectTag, nil )
     end
 
     -- Now we can safely delete all matching by character and tag
-    DB_LoopEffect.DeleteRow( character_uuid, nil, effectTag, nil )
+    DB_LoopEffect.DeleteRow(character_uuid, nil, effectTag, nil)
 end
 
 -- ==================================================
@@ -147,18 +149,20 @@ function Notifications.Cfg_Disable_Statuses()
 end
 -- ==================================================
 
-
-function Notifications.CleanupOldVersion()
+function Notifications.CleanupOldVersions()
+    _I("Checking for leftovers from older versions and running cleanup..")
     Notifications.CleanupNonPlayer()
 
     local player = Utils.GetPlayer()
     local effectResource = nil -- Any
     for key, effectTag in pairs(EFFECT_TAGS) do
-        Notifications.DB_LoopEffect.CleanupDuplicates(player, effectTag, effectResource)
+        Notifications.DB_LoopEffect.CleanupDuplicates(player, effectTag, effectResource, true)
     end
-
+    for key, effectTag in pairs(EFFECT_TAGS_OLD) do
+        Notifications.DB_LoopEffect.CleanupDuplicates(player, effectTag, effectResource, true)
+    end
+    _DBG("Notifications.CleanupOldVersions() - Done")
 end
-
 
 -- Mods.KvCampEvents.Notifications.CleanupNonPlayer()
 function Notifications.CleanupNonPlayer()
@@ -190,7 +194,6 @@ function Notifications.CleanupNonPlayer()
     end
 end
 
-
 -- Mods.KvCampEvents.Notifications.DumpInfo()
 function Notifications.DumpInfo()
     _I("======== ======== Notifications.DumpInfo() ======== ========")
@@ -199,11 +202,12 @@ function Notifications.DumpInfo()
     local origins = DB.GetRowsFlattened("DB_Origins")
     for _, v in pairs(origins) do
         local effectHandle = DB_LoopEffect.GetOverheadMarkerHandle(v)
-        _I("N.DumpInfo() - Origin: ", v, tostring(effectHandle))
+        _I("N.DumpInfo() - Origin: ", v, "LoopEffect Handle (if any):", tostring(effectHandle))
     end
+
     local playerUUID = Utils.GetPlayer()
     local playerEffectHandle = DB_LoopEffect.GetOverheadMarkerHandle(playerUUID)
-    _I("N.DumpInfo() - Player: ", playerUUID, tostring(playerEffectHandle))
+    _I("N.DumpInfo() - Player: ", playerUUID, "LoopEffect Handle (if any):", tostring(playerEffectHandle))
 
     _I("======== Exclamation DB_LoopEffects in DB ========")
     local exclamationEffectsFromDB = DB.Get("DB_LoopEffect"):Get(
@@ -218,6 +222,34 @@ function Notifications.DumpInfo()
     for k, v in pairs(exclamationEffectsFromDB) do
         -- local character_uuid = v[1]
         -- local loop_effect_handle = v[2]
-        _I("N.DumpInfo() - DB_LoopEffect Row: ", k, table.unpack(v))
+        _I("DB_LoopEffect Row: ", k, table.unpack(v))
     end
+end
+
+-- Mods.KvCampEvents.Notifications.ForceCleanup()
+function Notifications.ForceCleanup()
+    Notifications.CleanupOldVersions()
+
+    -- TODO: Add overhead marker to all origins/companions to force it to be current
+    -- TODO: Remove overhead marker from all origins/companions
+    local exclamationEffectsFromDB = DB.Get("DB_LoopEffect"):Get(
+        nil, -- character_uuid
+        nil, -- loop_effect_handle
+        nil, -- "RelationshipMarker", -- "RelationshipMarker"
+        nil, -- "__ANY__"
+        EFFECT_RESOURCES["RelationshipExclamation"], -- EffectResource
+        nil, -- "Dummy_OverheadFX"
+        nil -- 1.0 -- Scale?
+    )
+    -- Call StopLoopEffect on all exclamation effect handles
+    for k, v in pairs(exclamationEffectsFromDB) do
+        local loop_effect_handle = v[2]
+        _I("DB_LoopEffect Row: ", k, table.unpack(v))
+        StopLoopEffect(loop_effect_handle)
+    end
+    -- Delete all rows matching exclamation effect resource
+    Osi.DB_LoopEffect:Delete(nil, nil, nil, nil, EFFECT_RESOURCES["RelationshipExclamation"], nil, nil)
+
+    _I("Notifications.ForceCleanup() - Result:")
+    Notifications.DumpInfo()
 end

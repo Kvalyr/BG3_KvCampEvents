@@ -110,3 +110,4 @@ function DB_LoopEffect.CleanupDuplicates( character_uuid, effectTag, effectResou
 
     end
 end
+

@@ -255,7 +255,7 @@ function CampEvents.Init()
         return
     end
 
-    Notifications.CleanupOldVersion()
+    Notifications.CleanupOldVersions()
 
     Events.RegisterGameStateChanged("Running", "Save", PreSave_Cleanup)
     Events.RegisterGameStateChanged("Save", "Running", PostSave_CheckNotify)
