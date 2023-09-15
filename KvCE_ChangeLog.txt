@@ -1,3 +1,6 @@
+v0.4.5
+    * Added workaround for temp followers by Elys@NexusMods
+
 v0.4.4
     * Softened "Failed to retrieve any player-controlled character" from an error to a warning
 
