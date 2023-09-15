@@ -61,15 +61,14 @@ end
 CampEvents.AddProceedCheck("Minthara_NotMoonrise", OnlyIfPlayerOrMintharaNotInMoonrise)
 
 
--- S_MOO_MainFloorInterior_SUB_429a55cc-58d2-4469-9577-852131e1fff3
--- S_MOO_MainFloorInterior_SUB_429a55cc-58d2-4469-9577-852131e1fff3
+-- No followers workaround provided by Elys @ NexusMods ( https://www.nexusmods.com/users/532478 )
+local function OnlyIfNoFollowersAround()
+    local partyFollowers = DB.Flatten(Osi.DB_PartyFollowers:Get(nil))
+    if Table.IsEmpty(partyFollowers) then
+        return true
+    end
 
--- DB_Subregion_Current (2) (char/subregion)
+    return false
+end
 
--- Utils.GetSubregionForCharacter(character_uuid)
--- Utils.IsCharacterInSubregion(character_uuid, subregion)
-
-
--- ==================================================
--- Sazza Loop Workaround
--- TODO: This is probably caused by DB_InCamp manipulations in v0.4.0 -- Probably unnecessary
+CampEvents.AddProceedCheck("NoFollowersAround", OnlyIfNoFollowersAround)
